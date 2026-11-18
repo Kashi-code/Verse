@@ -154,7 +154,7 @@ final class LocalAudioEngine: AudioBackend {
     nonisolated private static func completionHandler(
         for engine: LocalAudioEngine,
         token: Int
-    ) -> AVAudioPlayerNodeCompletionHandler {
+    ) -> @Sendable (AVAudioPlayerNodeCompletionCallbackType) -> Void {
         { [weak engine] _ in
             guard let engine else { return }
             Task { @MainActor in engine.segmentFinished(token) }
