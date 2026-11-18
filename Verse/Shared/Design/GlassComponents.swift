@@ -149,3 +149,26 @@ struct GlassIconButton: View {
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }
+
+/// A toolbar button whose symbol pops when toggled (save, follow).
+struct SymbolToggleButton: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    var isOn = false
+    let action: () -> Void
+
+    @State private var taps = 0
+
+    var body: some View {
+        Button {
+            taps += 1
+            action()
+        } label: {
+            Label(title, systemImage: systemImage)
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, value: taps)
+        }
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+    }
+}

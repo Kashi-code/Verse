@@ -44,28 +44,8 @@ struct CollectionDetailView: View {
                     scrollOffset: scrollOffset,
                     onSubtitleTap: ownerAction
                 ) {
-                    HStack(spacing: DS.Spacing.s) {
-                        GlassIconButton(
-                            title: isSaved ? "Remove from Library" : "Save to Library",
-                            systemImage: isSaved ? "checkmark" : "plus",
-                            isOn: isSaved
-                        ) {
-                            isSaved = UserLibrary(context: modelContext).toggleSaved(collection)
-                        }
-                        PlayShuffleButtons { shuffled in
-                            if case .loaded(let tracks) = loader.state { play(tracks, at: nil, shuffled: shuffled) }
-                        }
-                        if let url = collection.externalURL {
-                            ShareLink(item: url) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.title3.weight(.semibold))
-                                    .frame(width: 30, height: 30)
-                            }
-                            .buttonStyle(.glass)
-                            .buttonBorderShape(.circle)
-                            .controlSize(.large)
-                            .accessibilityLabel("Share")
-                        }
+                    PlayShuffleButtons { shuffled in
+                        if case .loaded(let tracks) = loader.state { play(tracks, at: nil, shuffled: shuffled) }
                     }
                 }
                 switch loader.state {
@@ -83,6 +63,22 @@ struct CollectionDetailView: View {
             .padding(.bottom, DS.Spacing.xl)
         }
         .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                SymbolToggleButton(
+                    title: isSaved ? "Remove from Library" : "Save to Library",
+                    systemImage: isSaved ? "checkmark" : "plus",
+                    isOn: isSaved
+                ) {
+                    isSaved = UserLibrary(context: modelContext).toggleSaved(collection)
+                }
+            }
+            if let url = collection.externalURL {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
+                }
+            }
+        }
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, offset in
             scrollOffset = offset
         }
@@ -140,18 +136,9 @@ struct ArtistDetailView: View {
                     isCircle: true,
                     scrollOffset: scrollOffset
                 ) {
-                    HStack(spacing: DS.Spacing.s) {
-                        GlassIconButton(
-                            title: isFollowing ? "Unfollow" : "Follow",
-                            systemImage: isFollowing ? "person.fill.checkmark" : "person.badge.plus",
-                            isOn: isFollowing
-                        ) {
-                            isFollowing = UserLibrary(context: modelContext).toggleFollow(followable)
-                        }
-                        PlayShuffleButtons { shuffled in
-                            if case .loaded(let page) = loader.state {
-                                player.play(page.popular, from: .artist(artist.name), shuffled: shuffled)
-                            }
+                    PlayShuffleButtons { shuffled in
+                        if case .loaded(let page) = loader.state {
+                            player.play(page.popular, from: .artist(artist.name), shuffled: shuffled)
                         }
                     }
                 }
@@ -198,6 +185,17 @@ struct ArtistDetailView: View {
             .padding(.bottom, DS.Spacing.xl)
         }
         .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                SymbolToggleButton(
+                    title: isFollowing ? "Unfollow" : "Follow",
+                    systemImage: isFollowing ? "person.fill.checkmark" : "person.badge.plus",
+                    isOn: isFollowing
+                ) {
+                    isFollowing = UserLibrary(context: modelContext).toggleFollow(followable)
+                }
+            }
+        }
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, offset in
             scrollOffset = offset
         }

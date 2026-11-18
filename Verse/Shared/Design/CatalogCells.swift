@@ -188,6 +188,7 @@ struct PlayShuffleButtons: View {
                 action(false)
             } label: {
                 Label("Play", systemImage: "play.fill")
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glassProminent)
@@ -196,6 +197,7 @@ struct PlayShuffleButtons: View {
                 action(true)
             } label: {
                 Label("Shuffle", systemImage: "shuffle")
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.glass)
