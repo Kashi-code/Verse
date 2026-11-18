@@ -1,0 +1,64 @@
+name: Verse
+options:
+  bundleIdPrefix: app.verse
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+targets:
+  Verse:
+    type: application
+    platform: iOS
+    sources:
+      - path: Verse
+    info:
+      path: Verse/Info.plist
+      properties:
+        CFBundleDisplayName: Verse
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, nl, fr]
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UIBackgroundModes: [audio]
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.verse.Verse
+        CODE_SIGN_STYLE: Automatic
+  VerseTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: VerseTests
+    dependencies:
+      - target: Verse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.verse.VerseTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Verse:
+    build:
+      targets:
+        Verse: all
+        VerseTests: [test]
+    test:
+      targets:
+        - VerseTests
