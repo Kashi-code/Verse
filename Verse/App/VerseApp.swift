@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftData
 import SwiftUI
 
@@ -44,6 +45,9 @@ struct VerseApp: App {
             player.restore(saved.queue, position: saved.position)
         }
         _player = State(initialValue: player)
+        // Siri and Shortcuts actions reach the same player and library.
+        AppDependencyManager.shared.add(dependency: player)
+        AppDependencyManager.shared.add(dependency: container)
 
         let lyrics = LyricsController(provider: .live(), settings: settings)
         lyrics.library = library

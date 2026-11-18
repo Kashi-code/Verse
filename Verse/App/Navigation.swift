@@ -8,12 +8,17 @@ enum CatalogRoute: Hashable {
     case recentlyPlayed
     case saved
     case following
+    case playlists
+    case userPlaylist(UUID)
+    case mix(Mix)
 
     /// The card the page zooms out of, when there is one.
-    var zoomSourceID: CatalogID? {
+    var zoomSourceID: AnyHashable? {
         switch self {
-        case .collection(let collection): collection.id
-        case .artist(let artist): artist.id
+        case .collection(let collection): AnyHashable(collection.id)
+        case .artist(let artist): AnyHashable(artist.id)
+        case .userPlaylist(let id): AnyHashable(UserPlaylistRoute.zoomID(id))
+        case .mix(let mix): AnyHashable(MixRoute.zoomID(mix.id))
         default: nil
         }
     }
@@ -49,8 +54,8 @@ extension View {
     }
 
     /// Marks this view as the card a page zooms out of.
-    func zoomSource(_ id: CatalogID) -> some View {
-        modifier(ZoomSource(id: id))
+    func zoomSource(_ id: some Hashable) -> some View {
+        modifier(ZoomSource(id: AnyHashable(id)))
     }
 }
 
@@ -77,12 +82,15 @@ private struct RouteDestination: View {
         case .recentlyPlayed: RecentlyPlayedView()
         case .saved: SavedCollectionsView()
         case .following: FollowedArtistsView()
+        case .playlists: PlaylistsView()
+        case .userPlaylist(let id): UserPlaylistDetailView(id: id)
+        case .mix(let mix): MixDetailView(mix: mix)
         }
     }
 }
 
 private struct ZoomSource: ViewModifier {
-    let id: CatalogID
+    let id: AnyHashable
 
     @Environment(\.zoomNamespace) private var namespace
 

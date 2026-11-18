@@ -33,6 +33,7 @@ struct FullscreenPlayerView: View {
         .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.2), value: player.isPlaying)
         .task(id: player.currentTrack?.artworkURL) { await loadPalette() }
         .sheet(isPresented: $showsQueue) { QueueSheet() }
+        .playlistPickerHost()
         .onChange(of: player.currentTrack == nil) { _, isEmpty in
             if isEmpty { dismiss() }
         }
@@ -117,7 +118,8 @@ struct FullscreenPlayerView: View {
                 .accessibilityElement(children: .combine)
             }
             Spacer()
-            Color.clear.frame(width: 44, height: 44)
+            PlayerMoreMenu()
+                .frame(width: 44, height: 44)
         }
         .buttonStyle(.plain)
     }
@@ -180,6 +182,42 @@ struct FullscreenPlayerView: View {
         } else {
             palette = await CoverPaletteProvider.shared.palette(for: key)
         }
+    }
+}
+
+/// Add to playlist, similar songs, album and share for the current song.
+private struct PlayerMoreMenu: View {
+    @Environment(PlayerController.self) private var player
+    @Environment(AppNavigator.self) private var navigator: AppNavigator?
+    @Environment(PlaylistPicker.self) private var playlistPicker: PlaylistPicker?
+    @State private var similarTaps = 0
+
+    var body: some View {
+        Menu {
+            if let track = player.currentTrack {
+                if let playlistPicker {
+                    Button("Add to Playlist…", systemImage: "text.badge.plus") { playlistPicker.present([track]) }
+                }
+                Button("Play Similar Songs", systemImage: "sparkles") {
+                    similarTaps += 1
+                    Task { await player.playSimilarSongs() }
+                }
+                if let album = track.albumReference, let navigator {
+                    Button("Go to Album", systemImage: "square.stack") { navigator.open(.collection(album)) }
+                }
+                if let url = track.externalURL {
+                    ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
+                }
+            }
+        } label: {
+            Label("More", systemImage: "ellipsis")
+                .labelStyle(.iconOnly)
+                .font(.title3.weight(.semibold))
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        .disabled(player.currentTrack == nil)
+        .sensoryFeedback(.impact(weight: .light), trigger: similarTaps)
     }
 }
 

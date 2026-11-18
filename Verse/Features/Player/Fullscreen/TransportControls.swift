@@ -70,6 +70,8 @@ struct PlayerBottomBar: View {
             }
             .accessibilityValue(showsLyrics ? Text("Shown") : Text("Hidden"))
             Spacer()
+            SleepTimerMenu()
+            Spacer()
             AirPlayButton()
                 .frame(width: 44, height: 44)
             Spacer()
@@ -82,6 +84,44 @@ struct PlayerBottomBar: View {
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
         .padding(.horizontal, 12)
+    }
+}
+
+/// Pause after some minutes or at the end of the song. The moon fills while a timer is set.
+struct SleepTimerMenu: View {
+    @Environment(PlayerController.self) private var player
+
+    private static let minuteOptions = [5, 15, 30, 45, 60]
+
+    var body: some View {
+        Menu {
+            if let end = player.sleepTimerEndDate {
+                Section {
+                    Text("Stops at \(end, style: .time)")
+                }
+            } else if player.sleepTimer == .endOfSong {
+                Section {
+                    Text("Stops when this song ends")
+                }
+            }
+            ForEach(Self.minuteOptions, id: \.self) { minutes in
+                Button {
+                    player.setSleepTimer(.minutes(minutes))
+                } label: {
+                    Text("\(minutes) minutes")
+                }
+            }
+            Button("End of Song", systemImage: "music.note") { player.setSleepTimer(.endOfSong) }
+            if player.sleepTimer != nil {
+                Divider()
+                Button("Turn Off Timer", systemImage: "xmark", role: .destructive) { player.setSleepTimer(nil) }
+            }
+        } label: {
+            Label("Sleep Timer", systemImage: player.sleepTimer == nil ? "moon.zzz" : "moon.zzz.fill")
+                .foregroundStyle(player.sleepTimer == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+        }
+        .accessibilityValue(player.sleepTimer == nil ? Text("Off") : Text("On"))
+        .sensoryFeedback(.selection, trigger: player.sleepTimer)
     }
 }
 

@@ -1,6 +1,11 @@
 import Foundation
 import Observation
 
+enum SleepTimer: Equatable, Sendable {
+    case minutes(Int)
+    case endOfSong
+}
+
 /// The app's single player: owns the queue, drives the audio backend and keeps the lock screen
 /// and the user's library in sync. Works the same for every catalog. Views read it from the environment.
 @MainActor
@@ -14,6 +19,9 @@ final class PlayerController {
     private(set) var errorMessage: String?
     /// Keep playing similar songs when the queue runs out.
     var autoplayEnabled = true
+    private(set) var sleepTimer: SleepTimer?
+    /// When a timed sleep timer pauses playback.
+    private(set) var sleepTimerEndDate: Date?
 
     /// Set by the app once the user's library is available.
     @ObservationIgnored var library: UserLibrary?
@@ -28,6 +36,7 @@ final class PlayerController {
     @ObservationIgnored private var resumeAfterInterruption = false
     @ObservationIgnored private var needsRetry = false
     @ObservationIgnored private var lastKnownTime: TimeInterval = 0
+    @ObservationIgnored private var sleepTask: Task<Void, Never>?
 
     init(backend: any AudioBackend, nowPlaying: NowPlayingCenter? = nil, session: AudioSessionController? = nil) {
         self.backend = backend
@@ -180,6 +189,48 @@ final class PlayerController {
         queueDidChange()
     }
 
+    /// Keeps the current song and replaces Up Next with similar songs.
+    /// Returns false when nothing is playing or nothing similar was found.
+    @discardableResult
+    func playSimilarSongs() async -> Bool {
+        guard let track = currentTrack, let catalog else { return false }
+        let known = Set(queue.items.map(\.track.id))
+        let similar = ((try? await catalog.similarTracks(to: track)) ?? [])
+            .filter { !known.contains($0.id) && $0.streamURL != nil }
+        guard !similar.isEmpty, currentTrack?.id == track.id else { return false }
+        queue.clearUpNext()
+        queue.append(Array(similar.prefix(25)))
+        queueDidChange()
+        if !isPlaying { resume() }
+        return true
+    }
+
+    // MARK: Sleep timer
+
+    func setSleepTimer(_ timer: SleepTimer?) {
+        sleepTask?.cancel()
+        sleepTask = nil
+        sleepTimer = timer
+        sleepTimerEndDate = nil
+        if case .minutes(let minutes) = timer {
+            let seconds = TimeInterval(minutes * 60)
+            sleepTimerEndDate = Date.now.addingTimeInterval(seconds)
+            sleepTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(seconds))
+                guard !Task.isCancelled else { return }
+                self?.sleepTimerFired()
+            }
+        }
+        if currentTrack != nil { prepareNextTrack() }
+    }
+
+    func sleepTimerFired() {
+        sleepTask = nil
+        sleepTimer = nil
+        sleepTimerEndDate = nil
+        pause()
+    }
+
     func toggleLike() {
         guard let track = currentTrack, let library else { return }
         isCurrentLiked = library.toggleLike(track)
@@ -221,14 +272,14 @@ final class PlayerController {
             isPlaying = false
         }
         isCurrentLiked = library?.isLiked(track.id) ?? false
-        backend.prepareNext(queue.peekNext()?.track.streamURL)
+        prepareNextTrack()
         updateNowPlaying()
         onStateChange?()
     }
 
     private func queueDidChange() {
         if currentTrack != nil {
-            backend.prepareNext(queue.peekNext()?.track.streamURL)
+            prepareNextTrack()
         }
         onStateChange?()
     }
@@ -241,12 +292,27 @@ final class PlayerController {
         isPlaying = true
         isCurrentLiked = library?.isLiked(track.id) ?? false
         library?.recordPlay(of: track)
-        backend.prepareNext(queue.peekNext()?.track.streamURL)
+        prepareNextTrack()
         updateNowPlaying()
         onStateChange?()
     }
 
+    /// Nothing is prepared while "stop at end of song" is set, so the song really ends.
+    private func prepareNextTrack() {
+        backend.prepareNext(sleepTimer == .endOfSong ? nil : queue.peekNext()?.track.streamURL)
+    }
+
     private func trackDidFinish() {
+        if sleepTimer == .endOfSong {
+            sleepTimer = nil
+            // Move on but stay paused, so Play continues with the next song.
+            if queue.advance(userInitiated: false) != nil {
+                loadCurrent(autoplay: false)
+            } else {
+                reachedEndOfQueue()
+            }
+            return
+        }
         if queue.advance(userInitiated: false) != nil {
             loadCurrent(autoplay: true)
         } else if autoplayEnabled, let catalog, let last = currentTrack {

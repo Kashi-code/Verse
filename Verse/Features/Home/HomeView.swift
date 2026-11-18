@@ -9,10 +9,13 @@ struct HomeView: View {
     @State private var isShowingSettings = false
 
     @Query(HomeView.historyDescriptor) private var history: [PlayHistory]
+    @Query(sort: \Playlist.dateModified, order: .reverse) private var playlists: [Playlist]
+    @State private var mixes: [Mix] = []
+    @State private var recentlyPlayed: [TrackInfo] = []
 
     static var historyDescriptor: FetchDescriptor<PlayHistory> {
         var descriptor = FetchDescriptor<PlayHistory>(sortBy: [SortDescriptor(\.playedAt, order: .reverse)])
-        descriptor.fetchLimit = 60
+        descriptor.fetchLimit = 300
         return descriptor
     }
 
@@ -33,6 +36,7 @@ struct HomeView: View {
             }
             .refreshable { await model.load(using: catalog, force: true) }
             .task { await model.load(using: catalog) }
+            .onChange(of: history.first?.playedAt, initial: true) { rebuildFromHistory() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
@@ -85,6 +89,20 @@ struct HomeView: View {
             }
         }
 
+        if !mixes.isEmpty {
+            Shelf(title: "Made for You", items: mixes) { mix in
+                Button { router.open(.mix(mix)) } label: { MixCard(mix: mix) }
+                    .buttonStyle(.pressable)
+            }
+        }
+
+        if !playlists.isEmpty {
+            Shelf(title: "Your Playlists", items: Array(playlists.prefix(12))) { playlist in
+                Button { router.open(.userPlaylist(playlist.id)) } label: { PlaylistCard(playlist: playlist) }
+                    .buttonStyle(.pressable)
+            }
+        }
+
         if !feed.topSongs.isEmpty {
             Shelf(title: "Top Songs", items: feed.topSongs) { track in
                 Button { play(track, in: feed.topSongs, source: .songs) } label: { TrackCard(track: track) }
@@ -117,12 +135,14 @@ struct HomeView: View {
         }
     }
 
-    private var recentlyPlayed: [TrackInfo] {
+    /// Decoding snapshots is not free, so this runs only when a new play is recorded.
+    private func rebuildFromHistory() {
         var seen = Set<String>()
-        return history
+        recentlyPlayed = history
             .filter { seen.insert($0.trackKey).inserted }
             .prefix(15)
             .compactMap(\.track)
+        mixes = MixBuilder.mixes(from: history.compactMap(\.track))
     }
 
     private func play(_ track: TrackInfo, in tracks: [TrackInfo], source: QueueSource) {

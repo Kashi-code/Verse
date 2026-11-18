@@ -46,6 +46,7 @@ struct RootView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .playlistPickerHost()
         .environment(navigator)
         .environment(\.zoomNamespace, cardTransition)
         .animation(DS.Motion.smooth, value: network.isOnline)

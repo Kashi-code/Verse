@@ -46,6 +46,18 @@ final class Playlist {
         self.dateCreated = dateCreated
         self.dateModified = dateCreated
     }
+
+    var orderedEntries: [PlaylistEntry] { entries.sorted { $0.position < $1.position } }
+    var tracks: [TrackInfo] { orderedEntries.compactMap(\.track) }
+
+    /// Up to four different covers for the mosaic.
+    var coverURLs: [URL] { Self.mosaicURLs(from: tracks) }
+
+    nonisolated static func mosaicURLs(from tracks: [TrackInfo]) -> [URL] {
+        var seen = Set<URL>()
+        let urls = tracks.compactMap { $0.thumbnailURL ?? $0.artworkURL }.filter { seen.insert($0).inserted }
+        return Array(urls.prefix(4))
+    }
 }
 
 /// One song in a playlist. Songs from different catalogs can be mixed.

@@ -1,16 +1,20 @@
 import SwiftUI
 
-/// Now playing, Up Next (drag to reorder, swipe to remove) and where the queue came from.
+/// Now playing, Up Next (drag to reorder, swipe to remove), autoplay and where the queue came from.
 struct QueueSheet: View {
     @Environment(PlayerController.self) private var player
+    @Environment(AppSettings.self) private var settings
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        @Bindable var settings = settings
+
         NavigationStack {
             List {
                 if let current = player.queue.current {
                     Section("Now Playing") {
                         QueueRow(track: current.track)
+                            .listRowBackground(rowBackground)
                     }
                 }
                 Section {
@@ -21,6 +25,7 @@ struct QueueSheet: View {
                             QueueRow(track: item.track)
                         }
                         .buttonStyle(.plain)
+                        .listRowBackground(rowBackground)
                     }
                     .onDelete { offsets in
                         let items = offsets.map { player.upNext[$0] }
@@ -29,6 +34,14 @@ struct QueueSheet: View {
                     .onMove { offsets, destination in
                         player.moveUpNext(fromOffsets: offsets, toOffset: destination)
                     }
+                    if player.upNext.isEmpty {
+                        Text(settings.autoplay
+                             ? LocalizedStringKey("Similar songs will play when this one ends.")
+                             : LocalizedStringKey("Use Play Next or Add to Queue on any song."))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .listRowBackground(rowBackground)
+                    }
                 } header: {
                     Text("Up Next")
                 } footer: {
@@ -36,18 +49,25 @@ struct QueueSheet: View {
                         Text("Playing from \(source.title)")
                     }
                 }
-            }
-            .overlay {
-                if player.upNext.isEmpty {
-                    ContentUnavailableView("Nothing Up Next", systemImage: "list.bullet",
-                                           description: Text("Use Play Next or Add to Queue on any song."))
+                Section {
+                    Toggle(isOn: $settings.autoplay) {
+                        Label("Autoplay", systemImage: "infinity")
+                    }
+                    .listRowBackground(rowBackground)
+                } footer: {
+                    Text("When the queue ends, keep playing similar songs.")
                 }
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Queue")
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Clear", role: .destructive) { player.clearUpNext() }
+                        .disabled(player.upNext.isEmpty)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    EditButton()
                         .disabled(player.upNext.isEmpty)
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -57,6 +77,12 @@ struct QueueSheet: View {
             .sensoryFeedback(.selection, trigger: player.upNext.map(\.id))
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(.ultraThinMaterial)
+    }
+
+    /// Rows sit on the glass sheet instead of opaque cells.
+    private var rowBackground: some View {
+        Color.primary.opacity(0.06)
     }
 }
 

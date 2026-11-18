@@ -69,10 +69,14 @@ struct TrackContextMenu: View {
     @Environment(PlayerController.self) private var player
     @Environment(Router.self) private var router: Router?
     @Environment(\.modelContext) private var modelContext
+    @Environment(PlaylistPicker.self) private var playlistPicker: PlaylistPicker?
 
     var body: some View {
         Button("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward") { player.playNext([track]) }
         Button("Add to Queue", systemImage: "text.line.last.and.arrowtriangle.forward") { player.addToQueue([track]) }
+        if let playlistPicker {
+            Button("Add to Playlist…", systemImage: "text.badge.plus") { playlistPicker.present([track]) }
+        }
         Divider()
         let library = UserLibrary(context: modelContext)
         if library.isLiked(track.id) {

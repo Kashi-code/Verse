@@ -8,6 +8,7 @@ struct LibraryView: View {
     @Query(sort: \LikedTrack.likedAt, order: .reverse) private var liked: [LikedTrack]
     @Query(sort: \SavedCollection.savedAt, order: .reverse) private var saved: [SavedCollection]
     @Query(sort: \FollowedArtist.followedAt, order: .reverse) private var followed: [FollowedArtist]
+    @Query private var playlists: [Playlist]
 
     var body: some View {
         @Bindable var router = router
@@ -15,6 +16,7 @@ struct LibraryView: View {
         NavigationStack(path: $router.path) {
             List {
                 Section {
+                    entry("Playlists", "music.note.list", count: playlists.count, route: .playlists)
                     entry("Liked Songs", "heart.fill", count: liked.count, route: .likedSongs)
                     entry("Albums & Playlists", "square.stack.fill", count: saved.count, route: .saved)
                     entry("Artists", "music.microphone", count: followed.count, route: .following)
