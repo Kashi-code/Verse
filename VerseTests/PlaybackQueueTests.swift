@@ -15,32 +15,53 @@ struct PlaybackQueueTests {
     @Test func playsInOrderAndStopsAtTheEnd() {
         var (queue, rng) = makeQueue(3)
         #expect(queue.current?.track.title == "Track 0")
-        #expect(queue.advance(userInitiated: false, using: &rng)?.track.title == "Track 1")
-        #expect(queue.advance(userInitiated: false, using: &rng)?.track.title == "Track 2")
-        #expect(queue.advance(userInitiated: false, using: &rng) == nil)
+        do {
+            let result = queue.advance(userInitiated: false, using: &rng)
+            #expect(result?.track.title == "Track 1")
+        }
+        do {
+            let result = queue.advance(userInitiated: false, using: &rng)
+            #expect(result?.track.title == "Track 2")
+        }
+        do {
+            let result = queue.advance(userInitiated: false, using: &rng)
+            #expect(result == nil)
+        }
         #expect(queue.current?.track.title == "Track 2")
     }
 
     @Test func repeatAllWraps() {
         var (queue, rng) = makeQueue(2, startAt: 1)
         queue.repeatMode = .all
-        #expect(queue.advance(userInitiated: false, using: &rng)?.track.title == "Track 0")
+        do {
+            let result = queue.advance(userInitiated: false, using: &rng)
+            #expect(result?.track.title == "Track 0")
+        }
     }
 
     @Test func repeatOneRepeatsUntilTheUserSkips() {
         var (queue, rng) = makeQueue(3)
         queue.repeatMode = .one
-        #expect(queue.advance(userInitiated: false, using: &rng)?.track.title == "Track 0")
-        #expect(queue.advance(userInitiated: true, using: &rng)?.track.title == "Track 1")
+        do {
+            let result = queue.advance(userInitiated: false, using: &rng)
+            #expect(result?.track.title == "Track 0")
+        }
+        do {
+            let result = queue.advance(userInitiated: true, using: &rng)
+            #expect(result?.track.title == "Track 1")
+        }
     }
 
     @Test func goingBack() {
         var (queue, _) = makeQueue(3, startAt: 1)
-        #expect(queue.goBack())
+        let wentBack = queue.goBack()
+        #expect(wentBack)
         #expect(queue.current?.track.title == "Track 0")
-        #expect(!queue.goBack())
+        let wentBackAtStart = queue.goBack()
+        #expect(!wentBackAtStart)
         queue.repeatMode = .all
-        #expect(queue.goBack())
+        let wrapped = queue.goBack()
+        #expect(wrapped)
         #expect(queue.current?.track.title == "Track 2")
     }
 
@@ -130,14 +151,21 @@ struct PlaybackQueueTests {
     @Test func jumpAndEmptyQueue() {
         var (queue, rng) = makeQueue(4)
         let target = queue.upNext[2]
-        #expect(queue.jump(to: target.id) == target)
+        do {
+            let result = queue.jump(to: target.id)
+            #expect(result == target)
+        }
         #expect(queue.current == target)
 
         var empty = PlaybackQueue()
         empty.replace(with: [], startAt: 0, source: nil, shuffled: true, using: &rng)
         #expect(empty.current == nil)
-        #expect(empty.advance(userInitiated: true, using: &rng) == nil)
-        #expect(!empty.goBack())
+        do {
+            let result = empty.advance(userInitiated: true, using: &rng)
+            #expect(result == nil)
+        }
+        let emptyWentBack = empty.goBack()
+        #expect(!emptyWentBack)
     }
 
     @Test func survivesEncoding() throws {
