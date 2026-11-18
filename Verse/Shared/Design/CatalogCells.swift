@@ -132,6 +132,7 @@ struct CollectionCard: View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             ArtworkView(url: collection.artworkURL, cornerRadius: DS.Radius.card, size: size)
                 .frame(width: size, height: size)
+                .zoomSource(collection.id)
                 .shadow(color: DS.Shadow.color, radius: 10, y: 5)
             VStack(alignment: .leading, spacing: 2) {
                 Text(collection.title)
@@ -156,6 +157,7 @@ struct ArtistBubble: View {
         VStack(spacing: DS.Spacing.xs) {
             ArtworkView(url: artist.imageURL, size: size, isCircle: true)
                 .frame(width: size, height: size)
+                .zoomSource(artist.id)
                 .shadow(color: DS.Shadow.color, radius: 10, y: 5)
             HStack(spacing: 3) {
                 Text(artist.name)

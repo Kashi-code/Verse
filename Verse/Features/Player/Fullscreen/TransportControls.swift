@@ -1,4 +1,5 @@
 import AVKit
+import MediaPlayer
 import SwiftUI
 
 struct TransportControls: View {
@@ -95,4 +96,32 @@ struct AirPlayButton: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+}
+
+/// System volume slider (it also follows the hardware buttons). Hidden by the system in the simulator.
+struct VolumeSlider: View {
+    var body: some View {
+        HStack(spacing: DS.Spacing.s) {
+            Image(systemName: "speaker.fill")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            SystemVolumeView()
+            Image(systemName: "speaker.wave.3.fill")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 4)
+    }
+}
+
+private struct SystemVolumeView: UIViewRepresentable {
+    func makeUIView(context: Context) -> MPVolumeView {
+        let view = MPVolumeView(frame: .zero)
+        view.tintColor = .white
+        return view
+    }
+
+    func updateUIView(_ uiView: MPVolumeView, context: Context) {}
 }

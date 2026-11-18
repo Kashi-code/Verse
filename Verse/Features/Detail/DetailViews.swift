@@ -29,7 +29,10 @@ struct CollectionDetailView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @Environment(Router.self) private var router: Router?
+    @Environment(.modelContext) private var modelContext
     @State private var loader = PageLoader<[TrackInfo]>()
+    @State private var scrollOffset: CGFloat = 0
+    @State private var isSaved = false
 
     var body: some View {
         ScrollView {
@@ -38,10 +41,31 @@ struct CollectionDetailView: View {
                     artworkURL: collection.artworkURL,
                     title: collection.title,
                     subtitle: collection.subtitle,
+                    scrollOffset: scrollOffset,
                     onSubtitleTap: ownerAction
                 ) {
-                    PlayShuffleButtons { shuffled in
-                        if case .loaded(let tracks) = loader.state { play(tracks, at: nil, shuffled: shuffled) }
+                    HStack(spacing: DS.Spacing.s) {
+                        GlassIconButton(
+                            title: isSaved ? "Remove from Library" : "Save to Library",
+                            systemImage: isSaved ? "checkmark" : "plus",
+                            isOn: isSaved
+                        ) {
+                            isSaved = UserLibrary(context: modelContext).toggleSaved(collection)
+                        }
+                        PlayShuffleButtons { shuffled in
+                            if case .loaded(let tracks) = loader.state { play(tracks, at: nil, shuffled: shuffled) }
+                        }
+                        if let url = collection.externalURL {
+                            ShareLink(item: url) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.title3.weight(.semibold))
+                                    .frame(width: 30, height: 30)
+                            }
+                            .buttonStyle(.glass)
+                            .buttonBorderShape(.circle)
+                            .controlSize(.large)
+                            .accessibilityLabel("Share")
+                        }
                     }
                 }
                 switch loader.state {
@@ -59,7 +83,11 @@ struct CollectionDetailView: View {
             .padding(.bottom, DS.Spacing.xl)
         }
         .toolbarTitleDisplayMode(.inline)
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, offset in
+            scrollOffset = offset
+        }
         .task {
+            isSaved = UserLibrary(context: modelContext).isSaved(collection.id)
             let catalog = catalog
             let collection = collection
             await loader.load { try await catalog.tracks(in: collection) }
@@ -97,15 +125,33 @@ struct ArtistDetailView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @Environment(Router.self) private var router: Router?
+    @Environment(.modelContext) private var modelContext
     @State private var loader = PageLoader<ArtistPage>()
+    @State private var scrollOffset: CGFloat = 0
+    @State private var isFollowing = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.l) {
-                HeroHeader(artworkURL: headerImage, title: artist.name, subtitle: artist.id.source.displayName, isCircle: true) {
-                    PlayShuffleButtons { shuffled in
-                        if case .loaded(let page) = loader.state {
-                            player.play(page.popular, from: .artist(artist.name), shuffled: shuffled)
+                HeroHeader(
+                    artworkURL: headerImage,
+                    title: artist.name,
+                    subtitle: artist.id.source.displayName,
+                    isCircle: true,
+                    scrollOffset: scrollOffset
+                ) {
+                    HStack(spacing: DS.Spacing.s) {
+                        GlassIconButton(
+                            title: isFollowing ? "Unfollow" : "Follow",
+                            systemImage: isFollowing ? "person.fill.checkmark" : "person.badge.plus",
+                            isOn: isFollowing
+                        ) {
+                            isFollowing = UserLibrary(context: modelContext).toggleFollow(followable)
+                        }
+                        PlayShuffleButtons { shuffled in
+                            if case .loaded(let page) = loader.state {
+                                player.play(page.popular, from: .artist(artist.name), shuffled: shuffled)
+                            }
                         }
                     }
                 }
@@ -152,11 +198,22 @@ struct ArtistDetailView: View {
             .padding(.bottom, DS.Spacing.xl)
         }
         .toolbarTitleDisplayMode(.inline)
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, offset in
+            scrollOffset = offset
+        }
         .task {
+            isFollowing = UserLibrary(context: modelContext).isFollowing(artist.id)
             let catalog = catalog
             let artist = artist
             await loader.load { try await catalog.artistPage(for: artist) }
         }
+    }
+
+    /// Saved with a picture so the Library can show it.
+    private var followable: CatalogArtist {
+        var copy = artist
+        if copy.imageURL == nil { copy.imageURL = headerImage }
+        return copy
     }
 
     /// Apple artists have no photo in the public catalog; use their top song's cover instead.

@@ -44,6 +44,8 @@ struct HeroHeader<Actions: View>: View {
     let title: String
     let subtitle: String
     var isCircle = false
+    /// How far the page has scrolled; the colour bleed fades out as you scroll.
+    var scrollOffset: CGFloat = 0
     var onSubtitleTap: (() -> Void)?
     @ViewBuilder let actions: () -> Actions
 
@@ -54,6 +56,7 @@ struct HeroHeader<Actions: View>: View {
             ArtworkView(url: artworkURL, cornerRadius: DS.Radius.panel, size: 240, isCircle: isCircle)
                 .frame(width: 240, height: 240)
                 .shadow(color: Color(palette.accent).opacity(0.5), radius: 30, y: 16)
+                .scaleEffect(1 - min(max(scrollOffset, 0) / 1600, 0.12), anchor: .bottom)
                 .padding(.top, DS.Spacing.m)
             Text(title)
                 .font(.title.weight(.heavy))
@@ -78,6 +81,7 @@ struct HeroHeader<Actions: View>: View {
         .frame(maxWidth: .infinity)
         .background(alignment: .top) {
             ColorBleed(palette: palette)
+                .opacity(1 - min(max(scrollOffset, 0) / 320, 1))
         }
         .task(id: artworkURL) {
             let palette = await CoverPaletteProvider.shared.palette(for: artworkURL)

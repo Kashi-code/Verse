@@ -13,7 +13,7 @@ struct AppSettingsTests {
 
     @Test func usesSensibleDefaults() throws {
         let settings = AppSettings(defaults: try makeDefaults())
-        #expect(settings.appearance == .system)
+        #expect(settings.appearance == .dark)
         #expect(settings.crossfadeSeconds == 0)
         #expect(settings.gaplessPlayback)
         #expect(settings.launchBehavior == .resume)
@@ -24,13 +24,13 @@ struct AppSettingsTests {
     @Test func persistsChanges() throws {
         let defaults = try makeDefaults()
         let settings = AppSettings(defaults: defaults)
-        settings.appearance = .dark
+        settings.appearance = .light
         settings.crossfadeSeconds = 6
         settings.lrclibEnabled = false
         settings.lyricsTextSize = .large
 
         let reloaded = AppSettings(defaults: defaults)
-        #expect(reloaded.appearance == .dark)
+        #expect(reloaded.appearance == .light)
         #expect(reloaded.crossfadeSeconds == 6)
         #expect(!reloaded.lrclibEnabled)
         #expect(reloaded.lyricsTextSize == .large)

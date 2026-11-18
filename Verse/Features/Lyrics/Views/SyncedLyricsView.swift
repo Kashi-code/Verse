@@ -13,7 +13,7 @@ struct SyncedLyricsView: View {
     @Environment(PlayerController.self) private var player
     @Environment(AppSettings.self) private var settings
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @ScaledMetric(relativeTo: .title) private var baseFontSize: CGFloat = 30
+    @ScaledMetric(relativeTo: .largeTitle) private var baseFontSize: CGFloat = 34
 
     @State private var activeIndex: Int?
     @State private var isFollowing = true

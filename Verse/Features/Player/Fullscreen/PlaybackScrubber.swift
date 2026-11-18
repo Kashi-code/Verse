@@ -14,7 +14,9 @@ struct PlaybackScrubber: View {
                 GeometryReader { proxy in
                     let progress = duration > 0 ? time / duration : 0
                     ZStack(alignment: .leading) {
-                        Capsule().fill(.white.opacity(0.25))
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .overlay(Capsule().strokeBorder(DS.Border.color, lineWidth: DS.Border.hairline))
                         Capsule().fill(.white.opacity(dragTime == nil ? 0.8 : 1))
                             .frame(width: proxy.size.width * progress)
                     }

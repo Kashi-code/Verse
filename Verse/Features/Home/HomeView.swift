@@ -5,7 +5,7 @@ struct HomeView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @State private var model = HomeModel()
-    @State private var router = Router()
+    let router: Router
     @State private var isShowingSettings = false
 
     @Query(HomeView.historyDescriptor) private var history: [PlayHistory]
@@ -112,6 +112,7 @@ struct HomeView: View {
             Shelf(title: "Popular Playlists", items: feed.playlists) { collection in
                 Button { router.open(.collection(collection)) } label: { CollectionCard(collection: collection) }
                     .buttonStyle(.pressable)
+                    .accessibilityIdentifier("playlist-card")
             }
         }
     }

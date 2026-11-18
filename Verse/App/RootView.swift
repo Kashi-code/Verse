@@ -12,18 +12,23 @@ struct RootView: View {
 
     @State private var selectedTab: AppTab = .home
     @State private var isPlayerPresented = false
+    @State private var navigator = AppNavigator()
+    @State private var homeRouter = Router()
+    @State private var libraryRouter = Router()
+    @State private var searchRouter = Router()
     @Namespace private var playerTransition
+    @Namespace private var cardTransition
 
     var body: some View {
         TabView(selection: $selectedTab) {
             Tab("Home", systemImage: "house.fill", value: AppTab.home) {
-                HomeView()
+                HomeView(router: homeRouter)
             }
             Tab("Library", systemImage: "square.stack.fill", value: AppTab.library) {
-                LibraryView()
+                LibraryView(router: libraryRouter)
             }
             Tab("Search", systemImage: "magnifyingglass", value: AppTab.search, role: .search) {
-                SearchView()
+                SearchView(router: searchRouter)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
@@ -41,9 +46,25 @@ struct RootView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .environment(navigator)
+        .environment(\.zoomNamespace, cardTransition)
         .animation(DS.Motion.smooth, value: network.isOnline)
+        .onChange(of: navigator.request) { _, route in
+            guard let route else { return }
+            navigator.request = nil
+            isPlayerPresented = false
+            currentRouter.open(route)
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { player.onStateChange?() }
+        }
+    }
+
+    private var currentRouter: Router {
+        switch selectedTab {
+        case .home: homeRouter
+        case .library: libraryRouter
+        case .search: searchRouter
         }
     }
 }

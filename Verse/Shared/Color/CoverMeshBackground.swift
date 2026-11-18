@@ -16,6 +16,7 @@ struct CoverMeshBackground: View {
         }
         .animation(.easeInOut(duration: 1.2), value: palette)
         .overlay(Color.black.opacity(0.12))
+        .overlay(GrainOverlay())
         .accessibilityHidden(true)
     }
 

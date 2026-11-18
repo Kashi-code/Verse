@@ -120,3 +120,32 @@ struct PlayingIndicator: View {
         .accessibilityLabel("Now Playing")
     }
 }
+
+/// A round glass icon button whose symbol reacts when tapped (save, follow, share).
+struct GlassIconButton: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    var isOn = false
+    let action: () -> Void
+
+    @State private var taps = 0
+
+    var body: some View {
+        Button {
+            taps += 1
+            action()
+        } label: {
+            Image(systemName: systemImage)
+                .font(.title3.weight(.semibold))
+                .frame(width: 30, height: 30)
+                .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.bounce, value: taps)
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .controlSize(.large)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+    }
+}

@@ -5,8 +5,28 @@ struct MiniPlayerBar: View {
     var onOpen: () -> Void = {}
 
     @Environment(PlayerController.self) private var player
+    @State private var palette = CoverPalette.neutral
 
     var body: some View {
+        bar
+            .background {
+                // The bar takes on a hint of the cover colour.
+                Color(palette.accent).opacity(player.currentTrack == nil ? 0 : 0.22)
+                    .animation(DS.Motion.smooth, value: palette)
+            }
+            .overlay(alignment: .bottom) {
+                if player.currentTrack != nil {
+                    ProgressLine(tint: Color(palette.colors[1]).opacity(0.9))
+                        .padding(.horizontal, DS.Spacing.l)
+                }
+            }
+            .task(id: player.currentTrack?.artworkURL) {
+                palette = await CoverPaletteProvider.shared.palette(for: player.currentTrack?.artworkURL)
+            }
+    }
+
+    @ViewBuilder
+    private var bar: some View {
         let track = player.currentTrack
 
         HStack(spacing: 12) {
@@ -65,5 +85,25 @@ struct MiniPlayerBar: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A thin line showing how far the song has played.
+private struct ProgressLine: View {
+    let tint: Color
+
+    @Environment(PlayerController.self) private var player
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 0.5, paused: !player.isPlaying)) { _ in
+            let progress = player.duration > 0 ? min(max(player.currentTime / player.duration, 0), 1) : 0
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(tint)
+                    .frame(width: proxy.size.width * progress)
+            }
+            .frame(height: 2)
+        }
+        .accessibilityHidden(true)
     }
 }

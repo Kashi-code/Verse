@@ -16,7 +16,25 @@ final class ScreenshotTests: XCTestCase {
         app.swipeUp()
         pause(2)
         snapshot("02-Home-Shelves", app)
-        app.swipeDown()
+
+        let playlist = app.buttons["playlist-card"].firstMatch
+        var swipes = 0
+        while !(playlist.exists && playlist.isHittable) && swipes < 6 {
+            app.swipeUp()
+            swipes += 1
+        }
+        if playlist.exists && playlist.isHittable {
+            playlist.tap()
+            pause(4)
+            snapshot("02b-Playlist-Page", app)
+            app.swipeUp()
+            pause(1)
+            snapshot("02c-Playlist-Scrolled", app)
+            let back = app.navigationBars.buttons.firstMatch
+            if back.exists { back.tap() }
+            pause(1)
+        }
+        for _ in 0..<8 { app.swipeDown() }
 
         let hero = app.buttons["trending-card"].firstMatch
         if hero.waitForExistence(timeout: 5) {

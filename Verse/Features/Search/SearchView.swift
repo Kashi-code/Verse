@@ -4,7 +4,7 @@ struct SearchView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @State private var model = SearchModel()
-    @State private var router = Router()
+    let router: Router
 
     var body: some View {
         @Bindable var model = model

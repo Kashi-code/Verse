@@ -36,7 +36,7 @@ final class AppSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        appearance = AppearanceMode(rawValue: defaults.string(forKey: Key.appearance) ?? "") ?? .system
+        appearance = AppearanceMode(rawValue: defaults.string(forKey: Key.appearance) ?? "") ?? .dark
         let storedCrossfade = defaults.object(forKey: Key.crossfade) as? Double ?? 0
         crossfadeSeconds = min(max(storedCrossfade, Self.crossfadeRange.lowerBound), Self.crossfadeRange.upperBound)
         gaplessPlayback = defaults.object(forKey: Key.gapless) as? Bool ?? true

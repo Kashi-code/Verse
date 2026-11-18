@@ -1,21 +1,44 @@
 import SwiftData
 import SwiftUI
 
-/// The user's own music. Playlists, saved albums and followed artists arrive in the library milestone.
+/// The user's own music: likes, saved albums and playlists, followed artists, history.
 struct LibraryView: View {
-    @State private var router = Router()
+    let router: Router
+
     @Query(sort: \LikedTrack.likedAt, order: .reverse) private var liked: [LikedTrack]
+    @Query(sort: \SavedCollection.savedAt, order: .reverse) private var saved: [SavedCollection]
+    @Query(sort: \FollowedArtist.followedAt, order: .reverse) private var followed: [FollowedArtist]
 
     var body: some View {
         @Bindable var router = router
 
         NavigationStack(path: $router.path) {
             List {
-                Button { router.open(.likedSongs) } label: {
-                    LibraryEntryRow(title: "Liked Songs", systemImage: "heart.fill", detail: "\(liked.count)")
+                Section {
+                    entry("Liked Songs", "heart.fill", count: liked.count, route: .likedSongs)
+                    entry("Albums & Playlists", "square.stack.fill", count: saved.count, route: .saved)
+                    entry("Artists", "music.microphone", count: followed.count, route: .following)
+                    entry("Recently Played", "clock.fill", count: nil, route: .recentlyPlayed)
                 }
-                Button { router.open(.recentlyPlayed) } label: {
-                    LibraryEntryRow(title: "Recently Played", systemImage: "clock.fill", detail: nil)
+                let recentSaves = saved.prefix(6).compactMap(\.collection)
+                if !recentSaves.isEmpty {
+                    Section("Recently Saved") {
+                        ForEach(recentSaves) { collection in
+                            Button { router.open(.collection(collection)) } label: {
+                                HStack(spacing: DS.Spacing.s) {
+                                    ArtworkView(url: collection.artworkURL, size: 56)
+                                        .frame(width: 56, height: 56)
+                                        .zoomSource(collection.id)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(collection.title).font(DS.Typography.rowTitle).lineLimit(1)
+                                        Text(collection.subtitle).font(DS.Typography.rowSubtitle)
+                                            .foregroundStyle(DS.Text.tertiary).lineLimit(1)
+                                    }
+                                }
+                                .contentShape(.rect)
+                            }
+                        }
+                    }
                 }
             }
             .listStyle(.insetGrouped)
@@ -24,6 +47,12 @@ struct LibraryView: View {
             .catalogDestinations()
         }
         .environment(router)
+    }
+
+    private func entry(_ title: LocalizedStringKey, _ systemImage: String, count: Int?, route: CatalogRoute) -> some View {
+        Button { router.open(route) } label: {
+            LibraryEntryRow(title: title, systemImage: systemImage, detail: count.map(String.init))
+        }
     }
 }
 
@@ -77,6 +106,54 @@ struct LikedSongsView: View {
             .padding(.vertical, DS.Spacing.m)
         }
         .navigationTitle("Liked Songs")
+    }
+}
+
+struct SavedCollectionsView: View {
+    @Query(sort: \SavedCollection.savedAt, order: .reverse) private var saved: [SavedCollection]
+    @Environment(Router.self) private var router: Router?
+
+    var body: some View {
+        let collections = saved.compactMap(\.collection)
+        ScrollView {
+            if collections.isEmpty {
+                ContentUnavailableView("Nothing Saved Yet", systemImage: "square.stack",
+                                       description: Text("Save albums and playlists from their page."))
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: DS.Spacing.m)], spacing: DS.Spacing.l) {
+                    ForEach(collections) { collection in
+                        Button { router?.open(.collection(collection)) } label: { CollectionCard(collection: collection, size: 160) }
+                            .buttonStyle(.pressable)
+                    }
+                }
+                .padding(DS.Spacing.m)
+            }
+        }
+        .navigationTitle("Albums & Playlists")
+    }
+}
+
+struct FollowedArtistsView: View {
+    @Query(sort: \FollowedArtist.followedAt, order: .reverse) private var followed: [FollowedArtist]
+    @Environment(Router.self) private var router: Router?
+
+    var body: some View {
+        let artists = followed.compactMap(\.artist)
+        ScrollView {
+            if artists.isEmpty {
+                ContentUnavailableView("No Artists Yet", systemImage: "music.microphone",
+                                       description: Text("Follow artists from their page."))
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: DS.Spacing.m)], spacing: DS.Spacing.l) {
+                    ForEach(artists) { artist in
+                        Button { router?.open(.artist(artist)) } label: { ArtistBubble(artist: artist, size: 110) }
+                            .buttonStyle(.pressable)
+                    }
+                }
+                .padding(DS.Spacing.m)
+            }
+        }
+        .navigationTitle("Artists")
     }
 }
 

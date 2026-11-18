@@ -14,6 +14,7 @@ struct LyricLineView: View {
 
     @Environment(PlayerController.self) private var player
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
         VStack(alignment: .leading, spacing: fontSize * 0.2) {
@@ -34,21 +35,31 @@ struct LyricLineView: View {
                 }
             } else {
                 Text(line.text)
-                    .font(.system(size: fontSize, weight: .bold))
+                    .font(.system(size: fontSize, weight: .heavy, design: .rounded))
                     .fixedSize(horizontal: false, vertical: true)
             }
             if showsTranslation, let translation = line.translation {
                 Text(translation)
-                    .font(.system(size: fontSize * 0.6, weight: .semibold))
+                    .font(.system(size: fontSize * 0.6, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .foregroundStyle(.white)
         .opacity(opacity)
+        .blur(radius: reduceTransparency ? 0 : blurRadius)
         .scaleEffect(emphasis == .active ? 1 : 0.94, anchor: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(.rect)
+    }
+
+    /// Past lines are slightly blurred, upcoming ones barely; the active line is sharp.
+    private var blurRadius: CGFloat {
+        switch emphasis {
+        case .active: 0
+        case .upcoming: 0.6
+        case .past: 1.6
+        }
     }
 
     private var opacity: Double {
@@ -69,7 +80,7 @@ struct KaraokeWord: View {
     let lifts: Bool
 
     var body: some View {
-        let font = Font.system(size: fontSize, weight: .bold)
+        let font = Font.system(size: fontSize, weight: .heavy, design: .rounded)
         let wave = lifts ? sin(Double.pi * progress) : 0
 
         Text(text)

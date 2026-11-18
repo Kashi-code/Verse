@@ -13,3 +13,4 @@ Payload/
 *.ipa
 # Local secrets
 Config/Secrets.xcconfig
+screenshots/

@@ -3,6 +3,7 @@ import SwiftUI
 /// The full-screen player. Opened from the mini player with a zoom transition; swipe down to close.
 struct FullscreenPlayerView: View {
     @Environment(PlayerController.self) private var player
+    @Environment(AppNavigator.self) private var navigator: AppNavigator?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -132,9 +133,17 @@ struct FullscreenPlayerView: View {
             Text(player.currentTrack?.title ?? "")
                 .font(.title3.bold())
                 .lineLimit(1)
-            Text(player.currentTrack?.artist ?? "")
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            if let artist = player.currentTrack?.artistReference, let navigator {
+                Button(artist.name) { navigator.open(.artist(artist)) }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .accessibilityHint("Opens the artist")
+            } else {
+                Text(player.currentTrack?.artist ?? "")
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
             if let track = player.currentTrack, track.isPreview {
                 HStack(spacing: 6) {
                     Text("Preview")
@@ -157,6 +166,8 @@ struct FullscreenPlayerView: View {
         VStack(spacing: 20) {
             PlaybackScrubber()
             TransportControls()
+            VolumeSlider()
+                .frame(height: 34)
             PlayerBottomBar(showsLyrics: $showsLyrics, showsQueue: $showsQueue)
         }
         .padding(.top, 20)
@@ -188,6 +199,7 @@ struct LikeButton: View {
         .font(.title2)
         .frame(width: 44, height: 44)
         .contentTransition(.symbolEffect(.replace))
+        .symbolEffect(.bounce, value: taps)
         .buttonStyle(.plain)
         .disabled(player.currentTrack == nil)
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
