@@ -55,20 +55,6 @@ final class ScreenshotTests: XCTestCase {
             }
         }
 
-        let search = app.buttons["Search"].firstMatch
-        if search.waitForExistence(timeout: 5) {
-            search.tap()
-            pause(2)
-            snapshot("06-Search", app)
-            let field = app.searchFields.firstMatch
-            if field.waitForExistence(timeout: 5) {
-                field.tap()
-                field.typeText("lofi")
-                pause(4)
-                snapshot("07-Search-Results", app)
-            }
-        }
-
         let library = app.buttons["Library"].firstMatch
         if library.waitForExistence(timeout: 5) {
             library.tap()
@@ -96,6 +82,20 @@ final class ScreenshotTests: XCTestCase {
                 app.swipeUp()
                 pause(1)
                 snapshot("11-Playlist-Scrolled", app)
+            }
+        }
+
+        let search = app.buttons["Search"].firstMatch
+        if search.waitForExistence(timeout: 5) {
+            search.tap()
+            pause(2)
+            snapshot("06-Search", app)
+            let field = app.searchFields.firstMatch
+            if field.waitForExistence(timeout: 5) {
+                field.tap()
+                field.typeText("lofi")
+                pause(4)
+                snapshot("07-Search-Results", app)
             }
         }
     }
