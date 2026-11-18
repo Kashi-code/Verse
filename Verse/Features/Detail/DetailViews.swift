@@ -29,7 +29,7 @@ struct CollectionDetailView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @Environment(Router.self) private var router: Router?
-    @Environment(.modelContext) private var modelContext
+    @Environment(\.modelContext) private var modelContext
     @State private var loader = PageLoader<[TrackInfo]>()
     @State private var scrollOffset: CGFloat = 0
     @State private var isSaved = false
@@ -125,7 +125,7 @@ struct ArtistDetailView: View {
     @Environment(\.catalog) private var catalog
     @Environment(PlayerController.self) private var player
     @Environment(Router.self) private var router: Router?
-    @Environment(.modelContext) private var modelContext
+    @Environment(\.modelContext) private var modelContext
     @State private var loader = PageLoader<ArtistPage>()
     @State private var scrollOffset: CGFloat = 0
     @State private var isFollowing = false
