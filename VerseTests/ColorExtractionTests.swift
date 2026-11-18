@@ -53,7 +53,12 @@ struct ColorExtractionTests {
     }
 
     @Test func isDeterministic() {
-        let pixels = (0..<500).map { i in SIMD3(Double(i % 10) / 10, Double(i % 7) / 7, Double(i % 3) / 3) }
+        let pixels: [SIMD3<Double>] = (0..<500).map { i in
+            let red = Double(i % 10) / 10
+            let green = Double(i % 7) / 7
+            let blue = Double(i % 3) / 3
+            return SIMD3(red, green, blue)
+        }
         #expect(ColorExtractor.dominantColors(in: pixels, count: 5) == ColorExtractor.dominantColors(in: pixels, count: 5))
     }
 

@@ -37,7 +37,7 @@ struct CoverMeshBackground: View {
     }
 
     /// Corner points stay fixed, edge points slide along their edge, the centre wanders.
-    static func points(at time: TimeInterval) -> [SIMD2<Float>] {
+    nonisolated static func points(at time: TimeInterval) -> [SIMD2<Float>] {
         let a = Float(sin(time * 0.21))
         let b = Float(cos(time * 0.17))
         let c = Float(sin(time * 0.13 + 1.3))
