@@ -7,3 +7,5 @@ build/
 *.xcresult
 xcuserdata/
 .DS_Store
+# Local tools
+.tools/
