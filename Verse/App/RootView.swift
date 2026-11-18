@@ -6,6 +6,8 @@ enum AppTab: Hashable {
 
 struct RootView: View {
     @State private var selectedTab: AppTab = .home
+    @State private var isPlayerPresented = false
+    @Namespace private var playerTransition
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -21,7 +23,12 @@ struct RootView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .tabViewBottomAccessory {
-            MiniPlayerBar()
+            MiniPlayerBar { isPlayerPresented = true }
+                .matchedTransitionSource(id: "player", in: playerTransition)
+        }
+        .fullScreenCover(isPresented: $isPlayerPresented) {
+            FullscreenPlayerView()
+                .navigationTransition(.zoom(sourceID: "player", in: playerTransition))
         }
     }
 }

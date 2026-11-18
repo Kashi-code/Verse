@@ -5,6 +5,7 @@ struct AlbumDetailView: View {
 
     @Environment(LibraryRouter.self) private var router: LibraryRouter?
     @Environment(PlayerController.self) private var player
+    @State private var palette = CoverPalette.neutral
 
     var body: some View {
         let tracks = album.orderedSongs
@@ -13,7 +14,14 @@ struct AlbumDetailView: View {
             header(tracks: tracks)
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                .listRowBackground(
+                    LinearGradient(
+                        colors: [Color(palette.accent).opacity(0.4), Color(palette.accent).opacity(0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .animation(.easeInOut, value: palette)
+                )
 
             Section {
                 ForEach(tracks.indices, id: \.self) { index in
@@ -34,6 +42,9 @@ struct AlbumDetailView: View {
         .listStyle(.plain)
         .navigationTitle(album.title)
         .toolbarTitleDisplayMode(.inline)
+        .task(id: album.artworkKey) {
+            palette = await CoverPaletteProvider.shared.palette(for: album.artworkKey)
+        }
     }
 
     private func header(tracks: [Song]) -> some View {
