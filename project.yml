@@ -2,7 +2,7 @@ name: Verse
 options:
   bundleIdPrefix: app.verse
   deploymentTarget:
-    iOS: "27.0"
+    iOS: "26.0"
   createIntermediateGroups: true
 settings:
   base:
