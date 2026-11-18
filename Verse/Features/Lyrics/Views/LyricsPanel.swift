@@ -14,7 +14,7 @@ struct LyricsPanel: View {
                     LyricsOptionsMenu()
                 }
             }
-            .task(id: player.currentTrack?.source) {
+            .task(id: player.currentTrack?.id) {
                 await lyrics.load(for: player.currentTrack)
             }
     }
@@ -29,13 +29,19 @@ struct LyricsPanel: View {
                 Label("No Lyrics", systemImage: "quote.bubble")
             } description: {
                 if settings.lrclibEnabled {
-                    Text("No lyrics were found for this song.")
+                    Text("No lyrics for this song.")
                 } else {
                     Text("Turn on Find Lyrics Online in Settings to look them up.")
                 }
             }
         case .instrumental:
             ContentUnavailableView("Instrumental", systemImage: "music.note")
+        case .previewOnly:
+            ContentUnavailableView(
+                "Lyrics Need the Full Song",
+                systemImage: "quote.bubble",
+                description: Text("Previews start partway through a song, so lyrics can’t follow along.")
+            )
         case .loaded(let loaded, let source):
             if loaded.timing == .none {
                 PlainLyricsView(lyrics: loaded, source: source)

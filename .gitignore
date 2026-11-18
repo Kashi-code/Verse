@@ -11,3 +11,5 @@ xcuserdata/
 .tools/
 Payload/
 *.ipa
+# Local secrets
+Config/Secrets.xcconfig

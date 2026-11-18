@@ -2,7 +2,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppSettings.self) private var settings
+    @Environment(LyricsController.self) private var lyrics
     @Environment(\.dismiss) private var dismiss
+
+    @State private var imageCacheSize: Int64 = 0
+    @State private var lyricsCacheSize: Int64 = 0
+    @State private var isConfirmingClear = false
 
     var body: some View {
         @Bindable var settings = settings
@@ -18,23 +23,16 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    VStack(alignment: .leading) {
-                        LabeledContent("Crossfade", value: crossfadeLabel)
-                        Slider(value: $settings.crossfadeSeconds, in: AppSettings.crossfadeRange, step: 1) {
-                            Text("Crossfade")
-                        }
-                        .accessibilityValue(crossfadeLabel)
-                    }
-                    Toggle("Gapless Playback", isOn: $settings.gaplessPlayback)
                     Picker("On Launch", selection: $settings.launchBehavior) {
                         ForEach(LaunchBehavior.allCases) { behavior in
                             Text(behavior.title).tag(behavior)
                         }
                     }
+                    Toggle("Autoplay", isOn: $settings.autoplay)
                 } header: {
                     Text("Playback")
                 } footer: {
-                    Text("Crossfade applies to local files only.")
+                    Text("When your queue ends, keep playing similar songs.")
                 }
 
                 Section {
@@ -48,29 +46,32 @@ struct SettingsView: View {
                 } header: {
                     Text("Lyrics")
                 } footer: {
-                    Text("Online lyrics come from LRCLIB. Only the song title, artist, album and length are sent.")
+                    Text("Lyrics come from LRCLIB. Only the song title, artist, album and length are sent.")
                 }
 
                 Section {
-                    LabeledContent("Equaliser", value: String(localized: "Coming Soon"))
-                    LabeledContent("Speed & Pitch", value: String(localized: "Coming Soon"))
-                } header: {
-                    Text("Audio")
-                } footer: {
-                    Text("Audio effects work with local files only.")
-                }
-
-                Section("Storage") {
-                    LabeledContent("Imported Files", value: String(localized: "Coming Soon"))
-                    LabeledContent("Lyrics Cache", value: String(localized: "Coming Soon"))
-                }
-
-                Section("Apple Music") {
                     LabeledContent("Status", value: String(localized: "Not Connected"))
+                } header: {
+                    Text("Apple Music")
+                } footer: {
+                    Text("Popular songs play as 30-second previews. Full songs need Apple Music, which arrives in a later update.")
+                }
+
+                Section {
+                    LabeledContent("Images", value: ByteCountFormatter.string(fromByteCount: imageCacheSize, countStyle: .file))
+                    LabeledContent("Lyrics", value: ByteCountFormatter.string(fromByteCount: lyricsCacheSize, countStyle: .file))
+                    Button("Clear Cache", role: .destructive) { isConfirmingClear = true }
+                } header: {
+                    Text("Storage")
+                } footer: {
+                    Text("Clearing the cache never removes your likes, playlists or history.")
                 }
 
                 Section("About") {
                     LabeledContent("Version", value: Bundle.main.versionString)
+                    Text("Music from Audius. Previews provided courtesy of Apple Music. Lyrics from LRCLIB.")
+                        .font(.footnote)
+                        .foregroundStyle(DS.Text.secondary)
                 }
             }
             .navigationTitle("Settings")
@@ -80,17 +81,24 @@ struct SettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .confirmationDialog("Clear Cache?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+                Button("Clear Cache", role: .destructive) { clearCache() }
+            } message: {
+                Text("Cover images and lyrics will be downloaded again when needed.")
+            }
+            .task { refreshSizes() }
         }
     }
 
-    private var crossfadeLabel: String {
-        let seconds = Int(settings.crossfadeSeconds.rounded())
-        guard seconds > 0 else { return String(localized: "Off") }
-        return Duration.seconds(seconds).formatted(.units(allowed: [.seconds], width: .abbreviated))
+    private func refreshSizes() {
+        imageCacheSize = DirectorySize.of(ImageLoader.shared.directory)
+        lyricsCacheSize = LyricsCache.shared.totalSize()
     }
-}
 
-#Preview {
-    SettingsView()
-        .environment(AppSettings())
+    private func clearCache() {
+        ImageLoader.shared.clearDiskCache()
+        try? LyricsCache.shared.removeAll()
+        lyrics.forgetLoadedLyrics()
+        refreshSizes()
+    }
 }

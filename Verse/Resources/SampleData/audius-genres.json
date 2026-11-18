@@ -1,0 +1,100 @@
+{
+ "data": [
+  {
+   "name": "Electronic",
+   "count": 383325
+  },
+  {
+   "name": "Hip-Hop/Rap",
+   "count": 360230
+  },
+  {
+   "name": "Metal",
+   "count": 120028
+  },
+  {
+   "name": "Rock",
+   "count": 114722
+  },
+  {
+   "name": "Alternative",
+   "count": 112854
+  },
+  {
+   "name": "Experimental",
+   "count": 107934
+  },
+  {
+   "name": "Pop",
+   "count": 97090
+  },
+  {
+   "name": "Soundtrack",
+   "count": 51151
+  },
+  {
+   "name": "Ambient",
+   "count": 41118
+  },
+  {
+   "name": "Dubstep",
+   "count": 37593
+  },
+  {
+   "name": "Podcasts",
+   "count": 36134
+  },
+  {
+   "name": "Folk",
+   "count": 33827
+  },
+  {
+   "name": "House",
+   "count": 31790
+  },
+  {
+   "name": "R&B/Soul",
+   "count": 31023
+  },
+  {
+   "name": "Trap",
+   "count": 28346
+  },
+  {
+   "name": "Classical",
+   "count": 28178
+  },
+  {
+   "name": "Punk",
+   "count": 28164
+  },
+  {
+   "name": "Drum & Bass",
+   "count": 24709
+  },
+  {
+   "name": "Latin",
+   "count": 24258
+  },
+  {
+   "name": "World",
+   "count": 24065
+  },
+  {
+   "name": "Techno",
+   "count": 23478
+  },
+  {
+   "name": "Trance",
+   "count": 18868
+  },
+  {
+   "name": "Jazz",
+   "count": 16024
+  },
+  {
+   "name": "Lo-Fi",
+   "count": 15811
+  }
+ ]
+}

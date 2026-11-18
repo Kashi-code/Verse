@@ -65,7 +65,7 @@ private struct QueueRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ArtworkView(key: track.artworkKey, cornerRadius: 6)
+            ArtworkView(url: track.thumbnailURL ?? track.artworkURL, cornerRadius: DS.Radius.control, size: 40)
                 .frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(track.title)

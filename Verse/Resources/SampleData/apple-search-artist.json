@@ -1,0 +1,24 @@
+{
+ "resultCount": 2,
+ "results": [
+  {
+   "wrapperType": "artist",
+   "artistType": "Artist",
+   "artistName": "Taylor Swift",
+   "artistLinkUrl": "https://music.apple.com/us/artist/taylor-swift/159260351?uo=4",
+   "artistId": 159260351,
+   "amgArtistId": 816977,
+   "primaryGenreName": "Pop",
+   "primaryGenreId": 14
+  },
+  {
+   "wrapperType": "artist",
+   "artistType": "Artist",
+   "artistName": "Natalie Taylor",
+   "artistLinkUrl": "https://music.apple.com/us/artist/natalie-taylor/400555769?uo=4",
+   "artistId": 400555769,
+   "primaryGenreName": "Singer/Songwriter",
+   "primaryGenreId": 10
+  }
+ ]
+}

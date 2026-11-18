@@ -1,135 +1,107 @@
 import SwiftData
 import SwiftUI
 
+/// The user's own music. Playlists, saved albums and followed artists arrive in the library milestone.
 struct LibraryView: View {
-    @Environment(\.modelContext) private var modelContext
-
-    @AppStorage("library.section") private var section: LibrarySection = .songs
-    @AppStorage("library.songSort") private var songSort: SongSortOrder = .title
-    @AppStorage("library.albumSort") private var albumSort: AlbumSortOrder = .title
-    @AppStorage("library.albumLayout") private var albumLayout: CollectionLayout = .grid
-
-    @State private var router = LibraryRouter()
-    @State private var searchText = ""
-    @State private var isPickingFiles = false
-    @State private var isImporting = false
-    @State private var importSummary: ImportSummary?
+    @State private var router = Router()
+    @Query(sort: \LikedTrack.likedAt, order: .reverse) private var liked: [LikedTrack]
 
     var body: some View {
         @Bindable var router = router
 
         NavigationStack(path: $router.path) {
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .safeAreaBar(edge: .top) { sectionPicker }
-                .navigationTitle("Library")
-                .searchable(text: $searchText, prompt: Text("Search Library"))
-                .toolbar { toolbarContent }
-                .libraryDestinations()
+            List {
+                Button { router.open(.likedSongs) } label: {
+                    LibraryEntryRow(title: "Liked Songs", systemImage: "heart.fill", detail: "\(liked.count)")
+                }
+                Button { router.open(.recentlyPlayed) } label: {
+                    LibraryEntryRow(title: "Recently Played", systemImage: "clock.fill", detail: nil)
+                }
+            }
+            .listStyle(.insetGrouped)
+            .buttonStyle(.plain)
+            .navigationTitle("Library")
+            .catalogDestinations()
         }
         .environment(router)
-        .fileImporter(
-            isPresented: $isPickingFiles,
-            allowedContentTypes: ImportPlanner.contentTypes,
-            allowsMultipleSelection: true,
-            onCompletion: importFiles
-        )
-        .alert("Import Finished", isPresented: isShowingSummary, presenting: importSummary) { _ in
-            Button("OK", role: .cancel) {}
-        } message: { summary in
-            Text(summary.message)
-        }
     }
+}
 
-    @ViewBuilder
-    private var content: some View {
-        switch section {
-        case .songs:
-            SongsListView(sort: songSort, searchText: searchText, onImport: showFilePicker)
-        case .albums:
-            AlbumsCollectionView(sort: albumSort, layout: albumLayout, searchText: searchText, onImport: showFilePicker)
-        case .artists:
-            ArtistsListView(searchText: searchText, onImport: showFilePicker)
-        case .playlists:
-            ContentUnavailableView(
-                "No Playlists",
-                systemImage: "music.note.list",
-                description: Text("Playlists you create will appear here.")
-            )
-        }
-    }
+private struct LibraryEntryRow: View {
+    let title: LocalizedStringKey
+    let systemImage: String
+    let detail: String?
 
-    private var sectionPicker: some View {
-        Picker("Library Section", selection: $section) {
-            ForEach(LibrarySection.allCases) { section in
-                Text(section.title).tag(section)
+    var body: some View {
+        HStack(spacing: DS.Spacing.s) {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .foregroundStyle(.tint)
+                .frame(width: 36, height: 36)
+                .glassSurface(cornerRadius: DS.Radius.control, shadow: false)
+            Text(title).font(DS.Typography.rowTitle)
+            Spacer()
+            if let detail {
+                Text(detail).foregroundStyle(DS.Text.tertiary)
             }
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(DS.Text.tertiary)
+                .accessibilityHidden(true)
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        .contentShape(.rect)
     }
+}
 
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        if section == .songs || section == .albums {
-            ToolbarItem(placement: .topBarTrailing) {
-                viewOptionsMenu
-            }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-            if isImporting {
-                ProgressView()
-                    .accessibilityLabel("Importing")
-            } else {
-                Button("Import Music", systemImage: "plus", action: showFilePicker)
-            }
-        }
-    }
+struct LikedSongsView: View {
+    @Query(sort: \LikedTrack.likedAt, order: .reverse) private var liked: [LikedTrack]
+    @Environment(PlayerController.self) private var player
 
-    private var viewOptionsMenu: some View {
-        Menu("View Options", systemImage: "arrow.up.arrow.down") {
-            if section == .songs {
-                Picker("Sort By", selection: $songSort) {
-                    ForEach(SongSortOrder.allCases) { order in
-                        Text(order.title).tag(order)
+    var body: some View {
+        let tracks = liked.compactMap(\.track)
+        ScrollView {
+            VStack(spacing: DS.Spacing.l) {
+                if tracks.isEmpty {
+                    ContentUnavailableView("No Liked Songs", systemImage: "heart",
+                                           description: Text("Tap the heart on any song to save it here."))
+                } else {
+                    PlayShuffleButtons { shuffled in
+                        player.play(tracks, from: .playlist(String(localized: "Liked Songs")), shuffled: shuffled)
+                    }
+                    .padding(.horizontal, DS.Spacing.m)
+                    TrackList(tracks: tracks) { index in
+                        player.play(tracks, startingAt: index, from: .playlist(String(localized: "Liked Songs")))
                     }
                 }
+            }
+            .padding(.vertical, DS.Spacing.m)
+        }
+        .navigationTitle("Liked Songs")
+    }
+}
+
+struct RecentlyPlayedView: View {
+    @Query(HomeView.historyDescriptor) private var history: [PlayHistory]
+    @Environment(PlayerController.self) private var player
+
+    var body: some View {
+        let tracks = uniqueTracks
+        ScrollView {
+            if tracks.isEmpty {
+                ContentUnavailableView("Nothing Played Yet", systemImage: "clock",
+                                       description: Text("Songs you play will show up here."))
             } else {
-                Picker("Sort By", selection: $albumSort) {
-                    ForEach(AlbumSortOrder.allCases) { order in
-                        Text(order.title).tag(order)
-                    }
+                TrackList(tracks: tracks) { index in
+                    player.play(tracks, startingAt: index, from: .songs)
                 }
-                Picker("Layout", selection: $albumLayout) {
-                    Label("Grid", systemImage: "square.grid.2x2").tag(CollectionLayout.grid)
-                    Label("List", systemImage: "list.bullet").tag(CollectionLayout.list)
-                }
+                .padding(.vertical, DS.Spacing.m)
             }
         }
+        .navigationTitle("Recently Played")
     }
 
-    private var isShowingSummary: Binding<Bool> {
-        Binding(
-            get: { importSummary != nil },
-            set: { if !$0 { importSummary = nil } }
-        )
-    }
-
-    private func showFilePicker() {
-        isPickingFiles = true
-    }
-
-    private func importFiles(_ result: Result<[URL], any Error>) {
-        guard case .success(let urls) = result, !urls.isEmpty else { return }
-        isImporting = true
-        let importer = LibraryImporter(catalog: LibraryCatalog(context: modelContext))
-        Task {
-            let summary = await importer.importFiles(urls)
-            isImporting = false
-            if summary.needsAttention {
-                importSummary = summary
-            }
-        }
+    private var uniqueTracks: [TrackInfo] {
+        var seen = Set<String>()
+        return history.filter { seen.insert($0.trackKey).inserted }.compactMap(\.track)
     }
 }

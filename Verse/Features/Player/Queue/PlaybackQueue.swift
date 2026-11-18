@@ -109,6 +109,16 @@ struct PlaybackQueue: Codable, Sendable, Equatable {
         return items[0]
     }
 
+    /// What `advance(userInitiated: false)` will return, when that is known ahead of time.
+    /// Nil at a shuffled wrap-around (the new order isn't drawn yet) and at the end.
+    func peekNext() -> QueueItem? {
+        guard let currentIndex else { return nil }
+        if repeatMode == .one { return items[currentIndex] }
+        if currentIndex + 1 < items.count { return items[currentIndex + 1] }
+        if repeatMode == .all && !isShuffled { return items.first }
+        return nil
+    }
+
     /// Moves to the previous item. Returns true if the current item changed.
     @discardableResult
     mutating func goBack() -> Bool {

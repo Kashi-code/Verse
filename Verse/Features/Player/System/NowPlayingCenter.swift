@@ -12,7 +12,7 @@ enum RemoteAction: Equatable {
 final class NowPlayingCenter {
     var handler: ((RemoteAction) -> Void)?
 
-    private var artworkKey: String?
+    private var artworkURL: URL?
     private var artwork: MPMediaItemArtwork?
 
     init() {
@@ -45,7 +45,7 @@ final class NowPlayingCenter {
         let infoCenter = MPNowPlayingInfoCenter.default()
         guard let track else {
             infoCenter.nowPlayingInfo = nil
-            artworkKey = nil
+            artworkURL = nil
             artwork = nil
             return
         }
@@ -53,30 +53,30 @@ final class NowPlayingCenter {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: track.title,
             MPMediaItemPropertyArtist: track.artist,
-            MPMediaItemPropertyAlbumTitle: track.album,
+            MPMediaItemPropertyAlbumTitle: track.album ?? "",
             MPMediaItemPropertyPlaybackDuration: duration,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: elapsed,
             MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
             MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
         ]
-        if track.artworkKey == artworkKey, let artwork {
+        if track.artworkURL == artworkURL, let artwork {
             info[MPMediaItemPropertyArtwork] = artwork
         }
         infoCenter.nowPlayingInfo = info
         MPRemoteCommandCenter.shared().likeCommand.isActive = isLiked
 
-        if track.artworkKey != artworkKey {
-            loadArtwork(for: track.artworkKey)
+        if track.artworkURL != artworkURL {
+            loadArtwork(for: track.artworkURL)
         }
     }
 
-    private func loadArtwork(for key: String?) {
-        artworkKey = key
+    private func loadArtwork(for url: URL?) {
+        artworkURL = url
         artwork = nil
-        guard let key else { return }
+        guard let url else { return }
         Task {
-            guard let image = await ArtworkImageLoader.shared.image(for: key), artworkKey == key else { return }
+            guard let image = await ImageLoader.shared.image(for: url, pixelSize: 600), artworkURL == url else { return }
             let artwork = Self.makeArtwork(image)
             self.artwork = artwork
             let infoCenter = MPNowPlayingInfoCenter.default()

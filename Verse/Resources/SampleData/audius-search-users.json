@@ -1,0 +1,61 @@
+{
+ "data": [
+  {
+   "id": "BR1QY",
+   "name": "LoFi DREL",
+   "handle": "lofi_drel",
+   "is_verified": true,
+   "follower_count": 69,
+   "track_count": 6,
+   "playlist_count": 0,
+   "profile_picture": {
+    "1000x1000": "https://v.monophonic.digital/content/QmfSy7Dc87vYVyVRy2GTLqmH8e9yhef8BqaHbsuWW8qt1N/1000x1000.jpg",
+    "150x150": "https://v.monophonic.digital/content/QmfSy7Dc87vYVyVRy2GTLqmH8e9yhef8BqaHbsuWW8qt1N/150x150.jpg",
+    "480x480": "https://v.monophonic.digital/content/QmfSy7Dc87vYVyVRy2GTLqmH8e9yhef8BqaHbsuWW8qt1N/480x480.jpg"
+   },
+   "cover_photo": {
+    "2000x": "https://audius-content-9.figment.io/content/QmcQgEQzSYsjUHEBDDfknq7s82VXLtdJDAvjNkBjv8m3FQ/2000x.jpg",
+    "640x": "https://audius-content-9.figment.io/content/QmcQgEQzSYsjUHEBDDfknq7s82VXLtdJDAvjNkBjv8m3FQ/640x.jpg"
+   },
+   "bio": "LoFi Artist/Curator/Label Owner from Chicago."
+  },
+  {
+   "id": "qEBZP",
+   "name": "Lofi Beats",
+   "handle": "Lofibeat",
+   "is_verified": false,
+   "follower_count": 26748,
+   "track_count": 733,
+   "playlist_count": 8,
+   "profile_picture": {
+    "1000x1000": "https://val001.open-audio-validator.com/content/QmY685fLjPvG3Ve75TZ9FaMsbVpDb5voRnTzkF5VqRytEf/1000x1000.jpg",
+    "150x150": "https://val001.open-audio-validator.com/content/QmY685fLjPvG3Ve75TZ9FaMsbVpDb5voRnTzkF5VqRytEf/150x150.jpg",
+    "480x480": "https://val001.open-audio-validator.com/content/QmY685fLjPvG3Ve75TZ9FaMsbVpDb5voRnTzkF5VqRytEf/480x480.jpg"
+   },
+   "cover_photo": {
+    "2000x": "https://v.monophonic.digital/content/QmQQ5yuQ1iDa8oW219Zr512f6dCnWV1eCsB7mv8srun2fP/2000x.jpg",
+    "640x": "https://v.monophonic.digital/content/QmQQ5yuQ1iDa8oW219Zr512f6dCnWV1eCsB7mv8srun2fP/640x.jpg"
+   },
+   "bio": "I simply love LOFI. That's all about on my page. If you like my stuff spread the word and share it! :-)"
+  },
+  {
+   "id": "D8RRp",
+   "name": "Audius Lofi",
+   "handle": "audiuslofi",
+   "is_verified": false,
+   "follower_count": 2849,
+   "track_count": 0,
+   "playlist_count": 1,
+   "profile_picture": {
+    "1000x1000": "https://audius.rickyrombo.com/content/QmaGVPHWK9NSciWN49UESwAqH97DJLN2a6fqaNaCKAD7XW/1000x1000.jpg",
+    "150x150": "https://audius.rickyrombo.com/content/QmaGVPHWK9NSciWN49UESwAqH97DJLN2a6fqaNaCKAD7XW/150x150.jpg",
+    "480x480": "https://audius.rickyrombo.com/content/QmaGVPHWK9NSciWN49UESwAqH97DJLN2a6fqaNaCKAD7XW/480x480.jpg"
+   },
+   "cover_photo": {
+    "2000x": "https://val019.open-audio-validator.com/content/QmPjxdh8mpX9zgurbraxLNSxqETkBtWDvs4nu6TCry38Q1/2000x.jpg",
+    "640x": "https://val019.open-audio-validator.com/content/QmPjxdh8mpX9zgurbraxLNSxqETkBtWDvs4nu6TCry38Q1/640x.jpg"
+   },
+   "bio": "Sharing the best and most fresh Lofi Beats on Audius!"
+  }
+ ]
+}

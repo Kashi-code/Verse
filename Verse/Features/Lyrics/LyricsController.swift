@@ -11,6 +11,8 @@ final class LyricsController {
         case loaded(Lyrics, LyricsSource)
         case instrumental
         case notFound
+        /// Previews start somewhere in the middle of the song, so lyrics can't be synced.
+        case previewOnly
     }
 
     static let offsetStep = 0.1
@@ -20,32 +22,32 @@ final class LyricsController {
     /// Seconds added to playback time before matching lyrics: positive shows lyrics earlier.
     private(set) var offset: Double = 0
 
-    @ObservationIgnored var library: PlaybackLibraryBridge?
+    @ObservationIgnored var library: UserLibrary?
     @ObservationIgnored private let provider: LyricsProvider
     @ObservationIgnored private let settings: AppSettings
-    @ObservationIgnored private let importedLyrics: ManagedFileStore
-    @ObservationIgnored private var currentSource: TrackSource?
-    @ObservationIgnored private var results: [TrackSource: State] = [:]
+    @ObservationIgnored private var currentID: CatalogID?
+    @ObservationIgnored private var results: [CatalogID: State] = [:]
 
-    init(provider: LyricsProvider, settings: AppSettings, importedLyrics: ManagedFileStore = .importedLyrics) {
+    init(provider: LyricsProvider, settings: AppSettings) {
         self.provider = provider
         self.settings = settings
-        self.importedLyrics = importedLyrics
     }
 
     func load(for track: TrackInfo?) async {
         guard let track else {
-            currentSource = nil
+            currentID = nil
             state = .idle
             return
         }
-        if track.source == currentSource, state != .idle, state != .loading { return }
-        currentSource = track.source
+        if track.id == currentID, state != .idle, state != .loading { return }
+        currentID = track.id
+        offset = library?.lyricsOffset(for: track.id) ?? 0
 
-        let song = track.source.localSongID.flatMap { library?.song(id: $0) }
-        offset = song?.lyricsOffset ?? 0
-
-        if let known = results[track.source] {
+        if track.isPreview {
+            state = .previewOnly
+            return
+        }
+        if let known = results[track.id] {
             state = known
             return
         }
@@ -54,10 +56,8 @@ final class LyricsController {
         let request = LyricsRequest(
             title: track.title,
             artist: track.artist,
-            album: track.album,
-            duration: track.duration,
-            embedded: song?.embeddedLyrics,
-            sidecarURL: song?.lyricsFileName.map(importedLyrics.url(for:))
+            album: track.album ?? "",
+            duration: track.duration
         )
         let result = await provider.lyrics(for: request, useLRCLIB: settings.lrclibEnabled)
         let newState: State = switch result {
@@ -65,9 +65,9 @@ final class LyricsController {
         case .instrumental: .instrumental
         case .notFound: .notFound
         }
-        results[track.source] = newState
+        results[track.id] = newState
         // The song may have changed while we were loading.
-        if currentSource == track.source {
+        if currentID == track.id {
             state = newState
         }
     }
@@ -83,15 +83,15 @@ final class LyricsController {
     /// Forgets loaded lyrics, e.g. after clearing the cache or changing the LRCLIB setting.
     func forgetLoadedLyrics() {
         results.removeAll()
-        if currentSource != nil { state = .idle }
-        currentSource = nil
+        if currentID != nil { state = .idle }
+        currentID = nil
     }
 
     private func setOffset(_ value: Double) {
         let stepped = (value / Self.offsetStep).rounded() * Self.offsetStep
         offset = min(max(stepped, Self.offsetRange.lowerBound), Self.offsetRange.upperBound)
-        if let songID = currentSource?.localSongID {
-            library?.setLyricsOffset(offset, for: songID)
+        if let currentID {
+            library?.setLyricsOffset(offset, for: currentID)
         }
     }
 }

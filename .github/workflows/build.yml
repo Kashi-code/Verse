@@ -48,6 +48,13 @@ jobs:
           xcrun simctl list devices | grep "$UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
+      - name: Write secrets
+        env:
+          AUDIUS_API_KEY: ${{ secrets.AUDIUS_API_KEY }}
+        run: |
+          mkdir -p Config
+          echo "AUDIUS_API_KEY = $AUDIUS_API_KEY" > Config/Secrets.xcconfig
+
       - name: Generate Xcode project
         run: |
           brew install xcodegen
@@ -64,6 +71,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             | if command -v xcbeautify >/dev/null; then xcbeautify --renderer github-actions; else cat; fi
+
+      - name: Export screenshots
+        if: always()
+        run: |
+          mkdir -p Screenshots
+          xcrun xcresulttool export attachments --path TestResults.xcresult --output-path Screenshots || true
+          ls -la Screenshots | head -30
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Screenshots
+          path: Screenshots
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Build unsigned iPhone app (.ipa)
         if: github.ref == 'refs/heads/main'

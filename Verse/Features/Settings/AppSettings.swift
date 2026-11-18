@@ -30,6 +30,9 @@ final class AppSettings {
     var lrclibEnabled: Bool {
         didSet { defaults.set(lrclibEnabled, forKey: Key.lrclib) }
     }
+    var autoplay: Bool {
+        didSet { defaults.set(autoplay, forKey: Key.autoplay) }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -41,6 +44,7 @@ final class AppSettings {
         lyricsTextSize = LyricsTextSize(rawValue: defaults.string(forKey: Key.lyricsTextSize) ?? "") ?? .medium
         showLyricsTranslations = defaults.object(forKey: Key.translations) as? Bool ?? true
         lrclibEnabled = defaults.object(forKey: Key.lrclib) as? Bool ?? true
+        autoplay = defaults.object(forKey: Key.autoplay) as? Bool ?? true
     }
 
     enum Key {
@@ -51,5 +55,6 @@ final class AppSettings {
         static let lyricsTextSize = "settings.lyricsTextSize"
         static let translations = "settings.showLyricsTranslations"
         static let lrclib = "settings.lrclibEnabled"
+        static let autoplay = "settings.autoplay"
     }
 }

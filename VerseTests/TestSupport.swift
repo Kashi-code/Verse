@@ -17,12 +17,17 @@ struct SeededGenerator: RandomNumberGenerator {
 func makeTracks(_ count: Int) -> [TrackInfo] {
     (0..<count).map { index in
         TrackInfo(
-            source: .local(songID: UUID(), fileName: "track\(index).mp3"),
+            id: CatalogID(.audius, "track\(index)"),
             title: "Track \(index)",
             artist: "Artist",
+            artistID: CatalogID(.audius, "artist"),
             album: "Album",
+            albumID: nil,
             duration: 180,
-            artworkKey: nil
+            artworkURL: nil,
+            thumbnailURL: nil,
+            genre: "Electronic",
+            streamURL: URL(string: "https://example.com/track\(index).mp3")
         )
     }
 }
@@ -30,27 +35,35 @@ func makeTracks(_ count: Int) -> [TrackInfo] {
 @MainActor
 final class FakeAudioBackend: AudioBackend {
     var currentTime: TimeInterval = 0
+    var itemDuration: TimeInterval?
     var isPlaying = false
+    var isBuffering = false
     var onFinished: (@MainActor () -> Void)?
+    var onAdvancedToNext: (@MainActor () -> Void)?
+    var onFailed: (@MainActor () -> Void)?
+    var onStatusChange: (@MainActor () -> Void)?
+
     private(set) var loadedURLs: [URL] = []
+    private(set) var preparedURL: URL?
     var failingFileNames: Set<String> = []
     private var loadedURL: URL?
 
     var hasLoadedItem: Bool { loadedURL != nil }
 
-    func load(_ url: URL) throws -> TimeInterval {
-        if failingFileNames.contains(url.lastPathComponent) {
-            loadedURL = nil
-            throw CocoaError(.fileNoSuchFile)
-        }
-        loadedURL = url
+    func load(_ url: URL) {
         loadedURLs.append(url)
         currentTime = 0
         isPlaying = false
-        return 180
+        if failingFileNames.contains(url.lastPathComponent) {
+            loadedURL = nil
+            onFailed?()
+        } else {
+            loadedURL = url
+        }
     }
 
-    func play() throws { isPlaying = true }
+    func prepareNext(_ url: URL?) { preparedURL = url }
+    func play() { isPlaying = true }
     func pause() { isPlaying = false }
     func stop() {
         isPlaying = false
@@ -58,9 +71,19 @@ final class FakeAudioBackend: AudioBackend {
     }
     func seek(to time: TimeInterval) { currentTime = time }
 
-    /// Simulates the current file playing to its end.
+    /// Simulates the current stream ending with nothing prepared.
     func finish() {
         isPlaying = false
+        loadedURL = nil
         onFinished?()
+    }
+
+    /// Simulates the current stream ending and the prepared one taking over.
+    func finishIntoPrepared() {
+        guard let preparedURL else { return finish() }
+        loadedURL = preparedURL
+        self.preparedURL = nil
+        currentTime = 0
+        onAdvancedToNext?()
     }
 }

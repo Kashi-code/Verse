@@ -176,3 +176,28 @@ struct PlaybackQueueTests {
         #expect(try JSONDecoder().decode(PlaybackQueue.self, from: data) == queue)
     }
 }
+
+struct PlaybackQueuePeekTests {
+    @Test func peekMatchesWhatAdvanceReturns() {
+        for mode in RepeatMode.allCases {
+            for start in 0..<3 {
+                var rng = SeededGenerator(state: 7)
+                var queue = PlaybackQueue()
+                queue.replace(with: makeTracks(3), startAt: start, source: nil, shuffled: false, using: &rng)
+                queue.repeatMode = mode
+                let peeked = queue.peekNext()
+                let advanced = queue.advance(userInitiated: false, using: &rng)
+                #expect(peeked == advanced, "mode \(mode), start \(start)")
+            }
+        }
+    }
+
+    @Test func peekIsNilAtAShuffledWrapAround() {
+        var rng = SeededGenerator(state: 3)
+        var queue = PlaybackQueue()
+        queue.replace(with: makeTracks(2), startAt: 0, source: nil, shuffled: true, using: &rng)
+        queue.repeatMode = .all
+        queue.advance(userInitiated: false, using: &rng)
+        #expect(queue.peekNext() == nil)
+    }
+}

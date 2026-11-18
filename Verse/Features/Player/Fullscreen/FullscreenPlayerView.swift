@@ -30,7 +30,7 @@ struct FullscreenPlayerView: View {
         .environment(\.colorScheme, .dark)
         .animation(reduceMotion ? nil : .spring(duration: 0.45, bounce: 0.12), value: showsLyrics)
         .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.2), value: player.isPlaying)
-        .task(id: player.currentTrack?.artworkKey) { await loadPalette() }
+        .task(id: player.currentTrack?.artworkURL) { await loadPalette() }
         .sheet(isPresented: $showsQueue) { QueueSheet() }
         .onChange(of: player.currentTrack == nil) { _, isEmpty in
             if isEmpty { dismiss() }
@@ -122,7 +122,7 @@ struct FullscreenPlayerView: View {
     }
 
     private func cover(cornerRadius: CGFloat) -> some View {
-        ArtworkView(key: player.currentTrack?.artworkKey, cornerRadius: cornerRadius)
+        ArtworkView(url: player.currentTrack?.artworkURL, cornerRadius: cornerRadius, size: 360)
             .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
             .matchedGeometryEffect(id: "cover", in: coverSpace)
     }
@@ -135,9 +135,22 @@ struct FullscreenPlayerView: View {
             Text(player.currentTrack?.artist ?? "")
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+            if let track = player.currentTrack, track.isPreview {
+                HStack(spacing: 6) {
+                    Text("Preview")
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.white.opacity(0.18)))
+                    if let url = track.externalURL {
+                        Link("Listen on Apple Music", destination: url)
+                            .font(.caption.weight(.semibold))
+                    }
+                }
+                .padding(.top, 2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 
     private var controls: some View {
@@ -150,7 +163,7 @@ struct FullscreenPlayerView: View {
     }
 
     private func loadPalette() async {
-        let key = player.currentTrack?.artworkKey
+        let key = player.currentTrack?.artworkURL
         if let cached = CoverPaletteProvider.shared.cachedPalette(for: key) {
             palette = cached
         } else {
@@ -176,7 +189,7 @@ struct LikeButton: View {
         .frame(width: 44, height: 44)
         .contentTransition(.symbolEffect(.replace))
         .buttonStyle(.plain)
-        .disabled(player.currentTrack?.source.localSongID == nil)
+        .disabled(player.currentTrack == nil)
         .sensoryFeedback(.impact(weight: .light), trigger: taps)
     }
 }

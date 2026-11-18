@@ -5,23 +5,24 @@ import SwiftUI
 final class CoverPaletteProvider {
     static let shared = CoverPaletteProvider()
 
-    private let store: ArtworkStore
-    private var cache: [String: CoverPalette] = [:]
+    private let images: ImageLoader
+    private var cache: [URL: CoverPalette] = [:]
 
-    init(store: ArtworkStore = .shared) {
-        self.store = store
+    init(images: ImageLoader = .shared) {
+        self.images = images
     }
 
-    func cachedPalette(for key: String?) -> CoverPalette? {
-        guard let key else { return .neutral }
-        return cache[key]
+    func cachedPalette(for url: URL?) -> CoverPalette? {
+        guard let url else { return .neutral }
+        return cache[url]
     }
 
-    func palette(for key: String?) async -> CoverPalette {
-        guard let key else { return .neutral }
-        if let cached = cache[key] { return cached }
-        let palette = await ColorExtractor.palette(fromImageAt: store.url(for: key)) ?? .neutral
-        cache[key] = palette
+    func palette(for url: URL?) async -> CoverPalette {
+        guard let url else { return .neutral }
+        if let cached = cache[url] { return cached }
+        guard let file = await images.fileURL(for: url) else { return .neutral }
+        let palette = await ColorExtractor.palette(fromImageAt: file) ?? .neutral
+        cache[url] = palette
         return palette
     }
 }

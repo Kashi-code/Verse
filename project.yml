@@ -21,6 +21,9 @@ targets:
     platform: iOS
     sources:
       - path: Verse
+    configFiles:
+      Debug: Config/Secrets.xcconfig
+      Release: Config/Secrets.xcconfig
     info:
       path: Verse/Info.plist
       properties:
@@ -34,6 +37,7 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UIBackgroundModes: [audio]
+        AudiusAPIKey: $(AUDIUS_API_KEY)
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
@@ -54,12 +58,26 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.verse.VerseTests
         GENERATE_INFOPLIST_FILE: YES
+  VerseUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: VerseUITests
+    dependencies:
+      - target: Verse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.verse.VerseUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Verse
 schemes:
   Verse:
     build:
       targets:
         Verse: all
         VerseTests: [test]
+        VerseUITests: [test]
     test:
       targets:
         - VerseTests
+        - VerseUITests

@@ -1,17 +1,5 @@
 import Foundation
 
-protocol HTTPClient: Sendable {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
-}
-
-struct URLSessionHTTPClient: HTTPClient {
-    var session: URLSession = .shared
-
-    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        try await session.data(for: request)
-    }
-}
-
 /// A record from LRCLIB's `/api/get` and `/api/search`.
 struct LRCLIBRecord: Decodable, Sendable, Equatable {
     let id: Int
@@ -65,14 +53,14 @@ struct LRCLIBClient: Sendable {
         return try JSONDecoder().decode([LRCLIBRecord].self, from: data)
     }
 
-    /// Prefers results within 3 s of the song's length, then synced lyrics, then the closest length.
+    /// Prefers results within 2 s of the song's length, then synced lyrics, then the closest length.
     static func pickBest(_ records: [LRCLIBRecord], duration: TimeInterval) -> LRCLIBRecord? {
         let usable = records.filter { record in
             record.syncedLyrics?.isEmpty == false || record.plainLyrics?.isEmpty == false || record.instrumental == true
         }
         let candidates = usable.filter { record in
             guard duration > 0, let recordDuration = record.duration else { return true }
-            return abs(recordDuration - duration) <= 3
+            return abs(recordDuration - duration) <= 2
         }
         return candidates.min { a, b in
             let aSynced = a.syncedLyrics?.isEmpty == false

@@ -15,8 +15,8 @@ struct LyricsRequest: Sendable, Equatable {
     var artist: String
     var album: String
     var duration: TimeInterval
-    var embedded: String?
-    var sidecarURL: URL?
+    var embedded: String? = nil
+    var sidecarURL: URL? = nil
 }
 
 /// Finds lyrics for a song: embedded tags, then an imported `.lrc` file, then LRCLIB.

@@ -44,7 +44,7 @@ struct LyricsCache: Sendable {
     }
 
     func totalSize() -> Int64 {
-        ManagedFileStore(directory: directory).totalSize()
+        DirectorySize.of(directory)
     }
 
     private func url(for key: String) -> URL {

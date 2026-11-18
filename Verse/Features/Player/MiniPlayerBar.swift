@@ -14,13 +14,14 @@ struct MiniPlayerBar: View {
                 if track != nil { onOpen() }
             } label: {
                 HStack(spacing: 12) {
-                    ArtworkView(key: track?.artworkKey, cornerRadius: 6)
+                    ArtworkView(url: track?.thumbnailURL ?? track?.artworkURL, cornerRadius: DS.Radius.control, size: DS.Size.miniPlayerArtwork)
                         .frame(width: 36, height: 36)
                     titles(for: track)
                 }
                 .contentShape(.rect)
             }
             .accessibilityHint(track == nil ? Text("") : Text("Opens the player"))
+            .accessibilityIdentifier("mini-player")
 
             Button(
                 player.isPlaying ? LocalizedStringKey("Pause") : LocalizedStringKey("Play"),
