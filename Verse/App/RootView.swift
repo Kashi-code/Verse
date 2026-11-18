@@ -29,4 +29,5 @@ struct RootView: View {
 #Preview {
     RootView()
         .environment(AppSettings())
+        .modelContainer(for: LibrarySchema.models, inMemory: true)
 }

@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 @main
@@ -10,5 +11,6 @@ struct VerseApp: App {
                 .environment(settings)
                 .preferredColorScheme(settings.appearance.colorScheme)
         }
+        .modelContainer(for: LibrarySchema.models)
     }
 }
