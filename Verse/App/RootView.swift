@@ -29,5 +29,6 @@ struct RootView: View {
 #Preview {
     RootView()
         .environment(AppSettings())
+        .environment(PlayerController(backend: LocalAudioEngine()))
         .modelContainer(for: LibrarySchema.models, inMemory: true)
 }

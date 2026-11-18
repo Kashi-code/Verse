@@ -23,6 +23,7 @@ struct SongRow: View {
                     .accessibilityLabel("Liked")
             }
         }
+        .contentShape(.rect)
         .accessibilityElement(children: .combine)
     }
 }

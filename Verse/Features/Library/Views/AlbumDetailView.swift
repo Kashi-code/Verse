@@ -4,20 +4,28 @@ struct AlbumDetailView: View {
     let album: Album
 
     @Environment(LibraryRouter.self) private var router: LibraryRouter?
+    @Environment(PlayerController.self) private var player
 
     var body: some View {
         let tracks = album.orderedSongs
 
         List {
-            header
+            header(tracks: tracks)
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
 
             Section {
-                ForEach(tracks) { song in
-                    AlbumTrackRow(song: song, showsArtist: song.artistName != album.artistName)
-                        .contextMenu { SongContextMenu(song: song) }
+                ForEach(tracks.indices, id: \.self) { index in
+                    let song = tracks[index]
+                    Button {
+                        play(tracks, startingAt: index)
+                    } label: {
+                        AlbumTrackRow(song: song, showsArtist: song.artistName != album.artistName)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu { SongContextMenu(song: song) }
                 }
             } footer: {
                 Text(summary(trackCount: tracks.count))
@@ -28,7 +36,7 @@ struct AlbumDetailView: View {
         .toolbarTitleDisplayMode(.inline)
     }
 
-    private var header: some View {
+    private func header(tracks: [Song]) -> some View {
         VStack(spacing: 12) {
             ArtworkView(key: album.artworkKey, cornerRadius: 12)
                 .frame(maxWidth: 260)
@@ -52,9 +60,17 @@ struct AlbumDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            PlayShuffleButtons { shuffled in
+                play(tracks, startingAt: nil, shuffled: shuffled)
+            }
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
         .padding()
+    }
+
+    private func play(_ tracks: [Song], startingAt index: Int?, shuffled: Bool = false) {
+        player.play(tracks.map(TrackInfo.init), startingAt: index, from: .album(album.title), shuffled: shuffled)
     }
 
     private func summary(trackCount: Int) -> String {

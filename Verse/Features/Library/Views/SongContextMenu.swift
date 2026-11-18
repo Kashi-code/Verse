@@ -6,8 +6,16 @@ struct SongContextMenu: View {
     var onDelete: (() -> Void)?
 
     @Environment(LibraryRouter.self) private var router: LibraryRouter?
+    @Environment(PlayerController.self) private var player
 
     var body: some View {
+        Button("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward") {
+            player.playNext([TrackInfo(song)])
+        }
+        Button("Add to Queue", systemImage: "text.line.last.and.arrowtriangle.forward") {
+            player.addToQueue([TrackInfo(song)])
+        }
+        Divider()
         if song.isLiked {
             Button("Unlike", systemImage: "heart.slash") { song.isLiked = false }
         } else {

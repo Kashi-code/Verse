@@ -1,25 +1,53 @@
 import SwiftUI
 
-/// Placeholder until the player engine exists (milestone 3).
+/// Sits above the tab bar. Opens the fullscreen player in milestone 4.
 struct MiniPlayerBar: View {
+    @Environment(PlayerController.self) private var player
+
     var body: some View {
+        let track = player.currentTrack
+
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(.quaternary)
-                .frame(width: 32, height: 32)
-                .overlay {
-                    Image(systemName: "music.note")
+            ArtworkView(key: track?.artworkKey, cornerRadius: 6)
+                .frame(width: 36, height: 36)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(track?.title ?? String(localized: "Not Playing"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(track == nil ? .secondary : .primary)
+                    .lineLimit(1)
+                if let message = player.errorMessage {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .lineLimit(1)
+                } else if let artist = track?.artist {
+                    Text(artist)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
-                .accessibilityHidden(true)
-            Text("Not Playing")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-            Button("Play", systemImage: "play.fill") {}
-                .labelStyle(.iconOnly)
-                .disabled(true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+
+            Button(
+                player.isPlaying ? LocalizedStringKey("Pause") : LocalizedStringKey("Play"),
+                systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+            ) {
+                player.togglePlayPause()
+            }
+            .contentTransition(.symbolEffect(.replace))
+            .disabled(track == nil)
+
+            Button("Next", systemImage: "forward.fill") {
+                player.skipToNext()
+            }
+            .disabled(track == nil)
         }
+        .labelStyle(.iconOnly)
+        .font(.title3)
+        .buttonStyle(.plain)
         .padding(.horizontal)
     }
 }
