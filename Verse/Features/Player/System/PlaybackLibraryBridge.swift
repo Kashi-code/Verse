@@ -26,6 +26,12 @@ struct PlaybackLibraryBridge {
         song(id: id)?.isLiked ?? false
     }
 
+    func setLyricsOffset(_ offset: Double, for id: UUID) {
+        guard let song = song(id: id) else { return }
+        song.lyricsOffset = offset
+        try? context.save()
+    }
+
     /// Returns the new liked state, or nil if the song no longer exists.
     func toggleLike(_ id: UUID) -> Bool? {
         guard let song = song(id: id) else { return nil }

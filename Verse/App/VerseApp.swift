@@ -3,8 +3,9 @@ import SwiftUI
 
 @main
 struct VerseApp: App {
-    @State private var settings = AppSettings()
+    @State private var settings: AppSettings
     @State private var player: PlayerController
+    @State private var lyrics: LyricsController
     private let container: ModelContainer
 
     init() {
@@ -18,10 +19,18 @@ struct VerseApp: App {
             fatalError("Couldn't open the library database: \(error)")
         }
         self.container = container
+        let library = PlaybackLibraryBridge(context: container.mainContext)
+
+        let settings = AppSettings()
+        _settings = State(initialValue: settings)
 
         let player = PlayerController.live()
-        player.library = PlaybackLibraryBridge(context: container.mainContext)
+        player.library = library
         _player = State(initialValue: player)
+
+        let lyrics = LyricsController(provider: .live(), settings: settings)
+        lyrics.library = library
+        _lyrics = State(initialValue: lyrics)
     }
 
     var body: some Scene {
@@ -29,7 +38,11 @@ struct VerseApp: App {
             RootView()
                 .environment(settings)
                 .environment(player)
+                .environment(lyrics)
                 .preferredColorScheme(settings.appearance.colorScheme)
+                .onChange(of: settings.lrclibEnabled) {
+                    lyrics.forgetLoadedLyrics()
+                }
         }
         .modelContainer(container)
     }

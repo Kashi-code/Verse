@@ -37,5 +37,6 @@ struct RootView: View {
     RootView()
         .environment(AppSettings())
         .environment(PlayerController(backend: LocalAudioEngine()))
+        .environment(LyricsController(provider: .live(), settings: AppSettings()))
         .modelContainer(for: LibrarySchema.models, inMemory: true)
 }
