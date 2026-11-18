@@ -16,25 +16,10 @@ final class ScreenshotTests: XCTestCase {
         app.swipeUp()
         pause(2)
         snapshot("02-Home-Shelves", app)
-
-        let playlist = app.buttons["playlist-card"].firstMatch
-        var swipes = 0
-        while !(playlist.exists && playlist.isHittable) && swipes < 6 {
-            app.swipeUp()
-            swipes += 1
-        }
-        if playlist.exists && playlist.isHittable {
-            playlist.tap()
-            pause(4)
-            snapshot("02b-Playlist-Page", app)
-            app.swipeUp()
-            pause(1)
-            snapshot("02c-Playlist-Scrolled", app)
-            let back = app.navigationBars.buttons.firstMatch
-            if back.exists { back.tap() }
-            pause(1)
-        }
-        for _ in 0..<8 { app.swipeDown() }
+        app.swipeUp()
+        pause(2)
+        snapshot("02a-Home-More", app)
+        for _ in 0..<6 { app.swipeDown() }
 
         let hero = app.buttons["trending-card"].firstMatch
         if hero.waitForExistence(timeout: 5) {
@@ -52,6 +37,17 @@ final class ScreenshotTests: XCTestCase {
                     lyrics.tap()
                     pause(2)
                     snapshot("05-Player-Lyrics", app)
+                    lyrics.tap()
+                    pause(1)
+                }
+                let queue = app.buttons["Queue"].firstMatch
+                if queue.waitForExistence(timeout: 3) {
+                    queue.tap()
+                    pause(2)
+                    snapshot("05b-Queue", app)
+                    let done = app.buttons["Done"].firstMatch
+                    if done.waitForExistence(timeout: 3) { done.tap() }
+                    pause(1)
                 }
                 let close = app.buttons["Close"].firstMatch
                 if close.waitForExistence(timeout: 3) { close.tap() }
@@ -78,7 +74,37 @@ final class ScreenshotTests: XCTestCase {
             library.tap()
             pause(1)
             snapshot("08-Library", app)
+
+            let playlists = app.buttons["library-music.note.list"].firstMatch
+            if playlists.waitForExistence(timeout: 3) {
+                playlists.tap()
+                let row = app.buttons["user-playlist-row"].firstMatch
+                if row.waitForExistence(timeout: 3) {
+                    row.tap()
+                    pause(3)
+                    snapshot("09-Your-Playlist", app)
+                }
+                goBack(app)
+                goBack(app)
+            }
+
+            let saved = app.buttons["saved-row"].firstMatch
+            if saved.waitForExistence(timeout: 3) {
+                saved.tap()
+                pause(4)
+                snapshot("10-Playlist-Page", app)
+                app.swipeUp()
+                pause(1)
+                snapshot("11-Playlist-Scrolled", app)
+            }
         }
+    }
+
+    @MainActor
+    private func goBack(_ app: XCUIApplication) {
+        let back = app.navigationBars.buttons.firstMatch
+        if back.exists { back.tap() }
+        pause(1)
     }
 
     @MainActor

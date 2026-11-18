@@ -73,9 +73,26 @@ struct VerseApp: App {
                     network.onReconnect = { player.retryAfterReconnect() }
                     network.start()
                     player.onStateChange = { saveState() }
+                    await seedSampleLibrary()
                 }
         }
         .modelContainer(container)
+    }
+
+    /// Sample mode only: a playlist, a saved playlist and some plays, so every screen has content.
+    private func seedSampleLibrary() async {
+        guard Self.usesSampleData, let feed = try? await catalog.homeFeed() else { return }
+        let library = UserLibrary(context: container.mainContext)
+        guard library.playlists().isEmpty else { return }
+        let songs = feed.trending + feed.topSongs + feed.genres.flatMap(\.tracks)
+        library.createPlaylist(named: "Late Night Drive", with: Array(songs.prefix(8)))
+        let plays = Array(songs.prefix(6)) + Array(songs.prefix(3))
+        for (offset, track) in plays.enumerated() {
+            library.recordPlay(of: track, at: .now.addingTimeInterval(-Double(offset) * 60))
+        }
+        if let collection = feed.playlists.first {
+            library.toggleSaved(collection)
+        }
     }
 
     private func saveState() {

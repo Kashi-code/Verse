@@ -136,6 +136,7 @@ struct PlaylistsView: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("user-playlist-row")
             }
             .onDelete { offsets in
                 let library = UserLibrary(context: modelContext)

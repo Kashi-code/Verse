@@ -39,6 +39,7 @@ struct LibraryView: View {
                                 }
                                 .contentShape(.rect)
                             }
+                            .accessibilityIdentifier("saved-row")
                         }
                     }
                 }
@@ -55,6 +56,7 @@ struct LibraryView: View {
         Button { router.open(route) } label: {
             LibraryEntryRow(title: title, systemImage: systemImage, detail: count.map(String.init))
         }
+        .accessibilityIdentifier("library-\(systemImage)")
     }
 }
 
