@@ -9,3 +9,5 @@ xcuserdata/
 .DS_Store
 # Local tools
 .tools/
+Payload/
+*.ipa

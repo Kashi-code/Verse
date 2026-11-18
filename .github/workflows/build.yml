@@ -65,6 +65,33 @@ jobs:
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             | if command -v xcbeautify >/dev/null; then xcbeautify --renderer github-actions; else cat; fi
 
+      - name: Build unsigned iPhone app (.ipa)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Verse.xcodeproj \
+            -scheme Verse \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            | if command -v xcbeautify >/dev/null; then xcbeautify --renderer github-actions; else cat; fi
+          mkdir -p Payload
+          cp -R DerivedData/Build/Products/Release-iphoneos/Verse.app Payload/
+          zip -qry Verse.ipa Payload
+          ls -lh Verse.ipa
+
+      - name: Upload .ipa
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v5
+        with:
+          name: Verse-ipa
+          path: Verse.ipa
+          retention-days: 14
+
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v5
